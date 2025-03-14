@@ -11,14 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('book', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-        });
         
-        Schema::create('bookDaerah', function (Blueprint $table) {
+        Schema::create('bookDaerahs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bookID');
+            $table->foreignId('bookClassID');
             $table->integer('price'); 
             $table->string('daerah');
             $table->timestamps();
@@ -26,7 +22,7 @@ return new class extends Migration
 
         Schema::create('bookClass', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bookID');
+            $table->foreignId('bookDaerahID');
             $table->integer('stock'); 
             $table->integer('class');
             $table->timestamps();
@@ -38,8 +34,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('book');
-        Schema::dropIfExists('bookDaerah');
+        Schema::dropIfExists('bookDaerahs');
         Schema::dropIfExists('bookClass');
     }
 };

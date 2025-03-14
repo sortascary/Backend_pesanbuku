@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order', function (Blueprint $table) {
+        Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('userID');
             $table->integer('totalCost');
@@ -23,14 +23,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('orderDetail', function (Blueprint $table){
+        Schema::create('orderDetails', function (Blueprint $table){
             $table->id();
             $table->foreignId('orderID');
             $table->foreignId('orderBookID');
             $table->integer('totalBookPrice');
         });
 
-        Schema::create('orderBook', function (Blueprint $table){
+        Schema::create('orderBooks', function (Blueprint $table){
             $table->id();
             $table->foreignId('bookClassID');
             $table->boolean('isDone');
@@ -43,8 +43,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('order');
-        Schema::dropIfExists('orderDetail');
-        Schema::dropIfExists('orderBook');
+        Schema::dropIfExists('orders');
+        Schema::dropIfExists('orderDetails');
+        Schema::dropIfExists('orderBooks');
     }
 };
