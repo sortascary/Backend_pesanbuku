@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\V1\UserController;
 use App\Http\Controllers\V1\BookController;
+use App\Http\Controllers\V1\OrderController;
 use App\Http\Controllers\V1\NotificationController;
 
 Route::get('/user', function (Request $request) {
@@ -25,6 +26,10 @@ Route::prefix('book')->group(function (){
     Route::get('/daerah/{id}', [BookController::class , 'daerahsearch']);
 });
 
+Route::prefix('order')->group(function (){
+    Route::get('/', [OrderController::class , 'index']);
+    Route::get('/all', [OrderController::class , 'index']);
+});
 
 Route::get('/notification', [NotificationController::class, 'index']);
 Route::get('/notification/{id}', [NotificationController::class, 'show']);

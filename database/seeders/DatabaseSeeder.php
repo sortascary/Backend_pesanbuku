@@ -7,6 +7,9 @@ use App\Models\Notification;
 use App\Models\Book;
 use App\Models\BookClass;
 use App\Models\BookDaerah;
+use App\Models\Order;
+use App\Models\OrderBook;
+use App\Models\OrderDetail;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -47,5 +50,8 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        Order::factory(10)->create();
+        OrderBook::factory(10)->create();
     }
 }

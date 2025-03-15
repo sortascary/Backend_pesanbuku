@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
+use App\Models\BookDaerah; 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\hasMany;
 
 class Book extends Model
 {
     use HasFactory;
 
-    public function BookDaerah(): HasMany
+    public function bookdaerah(): hasMany
     {
-        return $this->HasMany(BookDaerah::class, 'bookID', 'id');
+        return $this->hasMany(BookDaerah::class, 'book_id', 'id');
+    }
+
+    public function bookclass(): hasMany
+    {
+        return $this->hasMany(BookClass::class, 'book_id', 'id');
     }
 }

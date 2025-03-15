@@ -12,30 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('userID');
-            $table->integer('totalCost');
-            $table->string('daerah');
-            $table->string('phone')->nullable();
-            $table->string('payment');
+            $table->uuid('id')->primary();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('payment'); // cash, transfer, or angsuran
             $table->boolean('isPayed');
-            $table->string('status');
+            $table->string('status'); // dipesan, diproses, done
+            $table->integer('total_book_price'); 
             $table->timestamps();
         });
 
-        Schema::create('order_Details', function (Blueprint $table){
+        Schema::create('order_books', function (Blueprint $table) { 
             $table->id();
-            $table->foreignId('orderID');
-            $table->foreignId('orderBookID');
-            $table->integer('totalBookPrice');
-        });
-
-        Schema::create('order_Books', function (Blueprint $table){
-            $table->id();
-            $table->foreignId('bookClassID');
+            $table->string('order_id');
+            $table->foreign('order_id')->references('id')->on('orders')->cascadeOnDelete();
+            $table->foreignId('book_class_id')->constrained()->cascadeOnDelete();
             $table->boolean('isDone');
-            $table->integer('ammount');
-        }); 
+            $table->integer('amount'); 
+            $table->timestamps();
+        });
+        
     }
 
     /**
@@ -43,8 +38,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('order_details');
+        Schema::dropIfExists('order_books');
         Schema::dropIfExists('orders');
-        Schema::dropIfExists('orderDetails');
-        Schema::dropIfExists('orderBooks');
     }
 };

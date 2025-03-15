@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('book_class', function (Blueprint $table) {
+        Schema::create('book_classes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')->constrained()->cascadeOnDelete();
             $table->integer('stock'); 
@@ -41,6 +41,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('books');        
         Schema::dropIfExists('bookDaerahs');
-        Schema::dropIfExists('bookClass');
+        Schema::dropIfExists('bookClasses');
     }
 };

@@ -20,8 +20,6 @@ class UserController extends Controller
      */
     public function index()
     {
-        //$users = User::all(); 
-        //return response()->json($users); 
         return new UserCollection(User::all());
     }
 
@@ -52,10 +50,8 @@ class UserController extends Controller
             ], 401);
         }
 
-        // Retrieve user after authentication
         $user = User::where('phone', $data['phone'])->first();
 
-        // Update FCM token if provided
         if (isset($data['FCMToken'])) {
             $user->FCMToken = $data['FCMToken'];
             $user->save();

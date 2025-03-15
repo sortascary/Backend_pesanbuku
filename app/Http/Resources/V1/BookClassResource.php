@@ -8,16 +8,13 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class BookClassResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
+
     public function toArray(Request $request): array
+    
     {
         return [
             'id' => $this->id,
-            'name' => Book::where('id', $this->book_id)->value('name') ?? 'unknown',
+            'name' =>$this->book->name,
             'class' => $this->class,
             'stock' => $this->stock,
         ];

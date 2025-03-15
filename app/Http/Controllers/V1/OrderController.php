@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers\V1;
 
+use App\Models\Order;
+use App\Models\OrderBook;
 use Illuminate\Http\Request;
+use App\Http\Resources\V1\OrderResource;
+use App\Http\Resources\V1\OrderBookResource;
 use App\Http\Controllers\Controller;
 
 class OrderController extends Controller
@@ -12,12 +16,10 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $order = Order::with('user', 'orderbook')->get();
+        return OrderResource::collection($order);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         //
@@ -26,9 +28,9 @@ class OrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(OrderRequest $request)
     {
-        //
+        $data = $request->validated();
     }
 
     /**

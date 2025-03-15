@@ -7,6 +7,7 @@ use App\Models\BookClass;
 use App\Models\BookDaerah;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\V1\BookResource;
 use App\Http\Resources\V1\BookClassResource;
 use App\Http\Resources\V1\BookDaerahResource;
 
@@ -17,7 +18,8 @@ class BookController extends Controller
      */
     public function index()
     {
-        return Book::all();
+        $book = Book::with('bookdaerah', 'bookclass')->get();
+        return BookResource::collection($book);
     }
 
     /**
@@ -30,12 +32,14 @@ class BookController extends Controller
 
     public function class()
     {
-        return BookClassResource::collection(BookClass::all());
+        $class = BookClass::with('book')->get();
+        return BookClassResource::collection($class);
     }
 
     public function daerah()
     {
-        return BookDaerahResource::collection(BookDaerah::all());
+        $daerah = BookDaerah::with('book')->get();
+        return BookDaerahResource::collection($daerah);
     }
 
     public function daerahsearch(string $Daerah)
