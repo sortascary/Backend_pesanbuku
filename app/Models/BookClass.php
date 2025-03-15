@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class BookClass extends Model
 {
-    protected $table = 'bookclass';
+    use HasFactory;
+    
+    protected $table = 'book_class';
 
     /**
      * The attributes that are mass assignable.

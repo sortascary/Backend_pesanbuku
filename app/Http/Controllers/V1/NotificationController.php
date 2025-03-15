@@ -12,17 +12,9 @@ class NotificationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(string $id)
+    public function index()
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json(['message' => 'User maybe found'], 404);
-        } else{            
-            $notification = Notification::where('user_id', $id)->get();
-        }
-        
-
+        $notification = Notification::all();
         return $notification;
     }
 
@@ -47,7 +39,16 @@ class NotificationController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        } else{            
+            $notification = Notification::where('user_id', $id)->get();
+        }
+        
+
+        return $notification;
     }
 
     /**

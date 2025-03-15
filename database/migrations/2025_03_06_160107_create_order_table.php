@@ -23,14 +23,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('orderDetails', function (Blueprint $table){
+        Schema::create('order_Details', function (Blueprint $table){
             $table->id();
             $table->foreignId('orderID');
             $table->foreignId('orderBookID');
             $table->integer('totalBookPrice');
         });
 
-        Schema::create('orderBooks', function (Blueprint $table){
+        Schema::create('order_Books', function (Blueprint $table){
             $table->id();
             $table->foreignId('bookClassID');
             $table->boolean('isDone');

@@ -28,7 +28,7 @@ class UserFactory extends Factory
             'daerah' => $this->faker->city(),
             'FCMToken' => $this->faker->uuid(),
             'schoolName' => $this->faker->company(),
-            'role' => $this->faker->randomElement(['Distributor', 'School']),
+            'role' => $this->faker->randomElement(['admin', 'sekolah']),
             'phone' => $this->faker->phoneNumber(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

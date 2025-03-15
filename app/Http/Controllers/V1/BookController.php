@@ -2,17 +2,22 @@
 
 namespace App\Http\Controllers\V1;
 
+use App\Models\Book;
+use App\Models\BookClass;
+use App\Models\BookDaerah;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\V1\BookClassResource;
+use App\Http\Resources\V1\BookDaerahResource;
 
-class LoginController extends Controller
+class BookController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        return Book::all();
     }
 
     /**
@@ -23,12 +28,20 @@ class LoginController extends Controller
         //
     }
 
-    public function Login()
+    public function class()
     {
-        validator(request()->all(), [
-            'phone' => ['required', 'phone'],
-            'password' => ['required']
-        ])->validate();
+        return BookClassResource::collection(BookClass::all());
+    }
+
+    public function daerah()
+    {
+        return BookDaerahResource::collection(BookDaerah::all());
+    }
+
+    public function daerahsearch(string $Daerah)
+    {
+        $bookD = BookDaerah::where('daerah', $Daerah)->get();
+        return BookDaerahResource::collection($bookD);
     }
 
     /**

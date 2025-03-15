@@ -5,7 +5,7 @@ namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-class AuthController extends Controller
+class OrderController extends Controller
 {
     /**
      * Display a listing of the resource.
