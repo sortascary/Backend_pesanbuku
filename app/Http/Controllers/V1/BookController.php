@@ -9,25 +9,23 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\BookResource;
 use App\Http\Resources\V1\BookClassResource;
+use App\Http\Resources\V1\BookOrderResource;
 use App\Http\Resources\V1\BookDaerahResource;
+use App\Http\Requests\V1\Book\UpdateBookRequest;
 
 class BookController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+    public function stock()
     {
         $book = Book::with('bookdaerah', 'bookclass')->get();
         return BookResource::collection($book);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function stocksearch(string $id)
     {
-        //
+        $book = Book::with('bookdaerah', 'bookclass')->where('id', $id)->get();
+        return BookResource::collection($book);
     }
 
     public function class()
@@ -36,55 +34,41 @@ class BookController extends Controller
         return BookClassResource::collection($class);
     }
 
-    public function daerah()
+    public function order(Request $request)
     {
-        $daerah = BookDaerah::with('book')->get();
+        $user = $request->user();
+        $daerah = BookDaerah::with('book')->where('daerah', $user->daerah)->get();
+        return BookOrderResource::collection($daerah);
+    }
+
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $daerah = BookDaerah::with('book')->where('daerah', $user->daerah)->get();
         return BookDaerahResource::collection($daerah);
     }
 
-    public function daerahsearch(string $Daerah)
+    public function daerahsearch(string $place)
     {
-        $bookD = BookDaerah::where('daerah', $Daerah)->get();
+        $bookD = BookDaerah::where('daerah', $place)->get();
         return BookDaerahResource::collection($bookD);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function update(UpdateBookRequest $request, string $id)
     {
-        //
-    }
+        $book = BookClass::find($id);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        if (!$book) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        $data = $request->validated();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $book->update($data);
+    
+        return response()->json([
+            'message' => 'Order updated successfully', 
+            'order' => new BookClassResource($book)
+        ]);
     }
 }

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('book_id')->constrained()->cascadeOnDelete();
             $table->integer('price'); 
-            $table->string('daerah');
+            $table->enum('daerah', ['Demak', 'Jepara', 'Kudus']);
             $table->timestamps();
         });
 

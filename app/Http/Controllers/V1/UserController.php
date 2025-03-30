@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\V1;
 
+use App\Models\User;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\JsonResponse;
-use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\V1\LoginRequest;
-use App\Http\Requests\V1\RegisterRequest;
+use App\Http\Requests\V1\User\LoginRequest;
+use App\Http\Requests\V1\User\RegisterRequest;
+use App\Http\Requests\V1\User\UpdateProfileRequest;
 use App\Http\Resources\V1\UserResource;
 use App\Http\Resources\V1\UserCollection;
 
@@ -28,16 +30,28 @@ class UserController extends Controller
         $data = $request->validated();
 
         $user = new User($data);
-        $user->password = Hash::make($data['password']);
 
-        $user->save();
-
-        return response()->json([
-            'message' => 'User created successfully',
-            'data' => new UserResource($user),
-            'token' => $user->createToken('auth_token')->plainTextToken,
-        ], 201);
-
+        if (User::where('phone', $user->phone)->exists()) { 
+            return response()->json([
+                'message' => 'Phone number already in use'
+            ], 409);
+        }else{
+            $userpost = User::create([
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'daerah' => $user->daerah,
+                'schoolName' => $user->schoolName,
+                'role' => $user->role,
+                'FCMToken' => $user->FCMToken,
+                'password' => Hash::make($data['password']),
+            ]);
+    
+            return response()->json([
+                'message' => 'User created successfully',
+                'data' => new UserResource($userpost),
+                'token' => $userpost->createToken('auth_token')->plainTextToken,
+            ], 201);
+        }        
     }
 
     public function Login(LoginRequest $request): JsonResponse
@@ -65,6 +79,15 @@ class UserController extends Controller
             'data' => new UserResource($user),
             'token' => $token
         ], 200);
+    }
+
+    public function logout(Request $request) : JsonResponse
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'message' => 'logout sucessful.'
+        ], 200  );
     }
 
     /**
@@ -96,9 +119,27 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateProfileRequest $request)
     {
-        //
+        $data = $request->validated();
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        try{
+
+            $user->update($data);
+
+            return response()->json([
+                'message' => 'User updated successfully', 
+                'order' => new UserResource($user)
+            ]);
+
+        } catch(\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**

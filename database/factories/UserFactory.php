@@ -25,7 +25,7 @@ class UserFactory extends Factory
     {
         return [
             'name' => $this->faker->name(),
-            'daerah' => $this->faker->city(),
+            'daerah' => $this->faker->randomElement(['Demak', 'Jepara', 'Kudus']),
             'FCMToken' => $this->faker->uuid(),
             'schoolName' => $this->faker->company(),
             'role' => $this->faker->randomElement(['admin', 'sekolah']),

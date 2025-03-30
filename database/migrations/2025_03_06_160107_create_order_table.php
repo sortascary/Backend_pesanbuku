@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('payment'); // cash, transfer, or angsuran
-            $table->boolean('isPayed');
-            $table->string('status'); // dipesan, diproses, done
+            $table->string('schoolName')->nullable();
+            $table->string('phone');
+            $table->enum('daerah', ['Demak', 'Jepara', 'Kudus']);
+            $table->enum('payment', ['cash', 'transfer', 'angsuran']);
+            $table->boolean('isPayed')->default(false);
+            $table->enum('status', ['dipesan', 'diproses', 'done'])->default('dipesan');
             $table->integer('total_book_price'); 
             $table->timestamps();
         });
@@ -26,8 +29,9 @@ return new class extends Migration
             $table->string('order_id');
             $table->foreign('order_id')->references('id')->on('orders')->cascadeOnDelete();
             $table->foreignId('book_class_id')->constrained()->cascadeOnDelete();
-            $table->boolean('isDone');
+            $table->boolean('isDone')->default(false); //is it packed yet
             $table->integer('amount'); 
+            $table->integer('subtotal'); 
             $table->timestamps();
         });
         

@@ -14,18 +14,18 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id()->primary();
             $table->string('name');
-            $table->string('daerah');
-            $table->string('FCMToken');
             $table->string('schoolName')->nullable();
-            $table->string('role'); //Schhool or Distributor
             $table->string('phone')->unique();
             $table->string('password');
+            $table->enum('daerah', ['Demak', 'Jepara', 'Kudus']);
+            $table->enum('role', ['sekolah', 'admin']); 
+            $table->string('FCMToken');
             $table->rememberToken();
             $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
+            $table->string('phone')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });

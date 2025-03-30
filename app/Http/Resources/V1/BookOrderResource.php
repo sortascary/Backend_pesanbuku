@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Models\BookClass;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class OrderBookResource extends JsonResource
+class BookOrderResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,9 +17,11 @@ class OrderBookResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'book' => new BookClassResource($this->bookclass),
-            'amount' => $this->amount,
-            'isDone' => $this->isDone,
+            'book_id' => $this->book->id,   
+            'name' => $this->book->name,
+            'daerah' => $this->daerah,
+            'price' => $this->price,
+            'classes' =>BookClassResource::collection( $this->book->bookclass),
         ];
     }
 }

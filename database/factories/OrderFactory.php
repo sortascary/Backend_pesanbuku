@@ -17,9 +17,13 @@ class OrderFactory extends Factory
      */
     public function definition(): array
     {
-        $userid = User::inRandomOrder()->first()?->id ?? User::factory();
+        $user = User::inRandomOrder()->first() ?? User::factory();
+
         return [
-            'user_id' => $userid,
+            'user_id' => $user->id,
+            'phone' => $user->phone,
+            'schoolName' => $user->schoolName,
+            'daerah' => $user->daerah,
             'payment' => $this->faker->randomElement(['cash', 'transfer', 'angsuran']),
             'isPayed' => $this->faker->boolean,
             'status' => $this->faker->randomElement(['diPesan', 'diProses', 'done']),

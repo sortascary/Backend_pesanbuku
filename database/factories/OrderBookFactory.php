@@ -23,6 +23,7 @@ class OrderBookFactory extends Factory
             'book_class_id' => BookClass::inRandomOrder()->first()?->id,
             'isDone' => $this->faker->boolean,
             'amount' => $this->faker->numberBetween(10, 20),
+            'subtotal' => $this->faker->numberBetween(10000, 20000),
         ];
     }
 }

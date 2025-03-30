@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Models\BookClass;
-    use Illuminate\Database\Eloquent\Model;
-    use Illuminate\Database\Eloquent\Relations\hasMany;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class OrderBook extends Model
@@ -13,13 +13,15 @@ class OrderBook extends Model
     use HasFactory;
 
     protected $fillable = [
+        'order_id',
         'book_class_id',
         'isDone',
-        'ammount'
+        'amount',
+        'subtotal'
     ];
 
-    public function bookclass(): hasMany
+    public function bookclass(): BelongsTo
     {
-        return $this->hasMany(BookClass::class, 'id', 'book_class_id');
+        return $this->BelongsTo(BookClass::class, 'book_class_id', 'id');
     }
 }

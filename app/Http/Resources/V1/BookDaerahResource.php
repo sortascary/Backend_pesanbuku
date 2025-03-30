@@ -14,11 +14,17 @@ class BookDaerahResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        $classes = $this->book->bookclass->pluck('class')->sort()->unique();
+
         return [
             'id' => $this->id,
+            'book_id' => $this->book->id,   
             'name' => $this->book->name,
             'daerah' => $this->daerah,
             'price' => $this->price,
+            'classes' => $classes->values(),
+            'class' => $classes->isNotEmpty() ? $classes->first() . '-' . $classes->last() : null
         ];
     }
 }
