@@ -13,7 +13,7 @@ use App\Http\Controllers\V1\NotificationController;
 
 Route::prefix('user')->group(function (){
     Route::post('/register', [UserController::class , 'register']);
-    Route::post('/login', [UserController::class , 'login'])->name('login');
+    Route::post('/login', [UserController::class , 'login']);
     Route::get('/AllUsers', [UserController ::class, 'index']);
     Route::get('/AllUsers/{id}', [UserController::class, 'show']);
 
@@ -42,7 +42,6 @@ Route::prefix('order')->group(function (){
         Route::post('/add', [OrderController::class , 'store']);
     
         Route::middleware('admin')->group(function () {
-            Route::get('/admin/{status}', [OrderController::class , 'searchAdmin']);
             Route::put('/update/{id}', [OrderController::class , 'updateorder']);
             Route::put('/update/book/{id}', [OrderController::class , 'updatebook']);
             Route::delete('/delete/{id}', [OrderController::class , 'destroy']);

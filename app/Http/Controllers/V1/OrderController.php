@@ -105,33 +105,19 @@ class OrderController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        if ($user->role == 'admin') {
+            $orders = Order::with(['user', 'orderbook'])
+            ->where('status', $status)
+            ->get();
+        } else {       
+            $orders = Order::with(['user', 'orderbook'])
+            ->where('user_id', $user->id)
+            ->where('status', $status)
+            ->get();
         }
-
-        $orders = Order::with(['user', 'orderbook'])
-        ->where('user_id', $user->id)
-        ->where('status', $status)
-        ->get();
 
         return OrderResource::collection($orders);
     }
-
-    public function searchAdmin(Request $request, string $status)
-    {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $orders = Order::with(['user', 'orderbook'])
-        ->where('status', $status)
-        ->get();
-
-        return OrderResource::collection($orders);
-    }
-
 
     /**
      * Show the form for editing the specified resource.

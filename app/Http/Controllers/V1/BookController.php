@@ -15,6 +15,17 @@ use App\Http\Requests\V1\Book\UpdateBookRequest;
 
 class BookController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role == 'admin') {
+            $daerah = BookDaerah::with('book')->get();
+        } else {       
+            $daerah = BookDaerah::with('book')->where('daerah', $user->daerah)->get();
+        }
+
+        return BookDaerahResource::collection($daerah);
+    }
 
     public function stock()
     {
@@ -41,12 +52,6 @@ class BookController extends Controller
         return BookOrderResource::collection($daerah);
     }
 
-    public function index(Request $request)
-    {
-        $user = $request->user();
-        $daerah = BookDaerah::with('book')->where('daerah', $user->daerah)->get();
-        return BookDaerahResource::collection($daerah);
-    }
 
     public function daerahsearch(string $place)
     {
