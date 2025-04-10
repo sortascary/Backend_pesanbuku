@@ -11,7 +11,8 @@ use App\Http\Resources\V1\BookResource;
 use App\Http\Resources\V1\BookClassResource;
 use App\Http\Resources\V1\BookOrderResource;
 use App\Http\Resources\V1\BookDaerahResource;
-use App\Http\Requests\V1\Book\UpdateBookRequest;
+use App\Http\Requests\V1\Book\UpdateBookStockRequest;
+use App\Http\Requests\V1\Book\UpdateBookPriceRequest;
 
 class BookController extends Controller
 {
@@ -59,7 +60,7 @@ class BookController extends Controller
         return BookDaerahResource::collection($bookD);
     }
 
-    public function update(UpdateBookRequest $request, string $id)
+    public function updateStock(UpdateBookStockRequest $request, string $id)
     {
         $book = BookClass::find($id);
 
@@ -73,7 +74,25 @@ class BookController extends Controller
     
         return response()->json([
             'message' => 'Order updated successfully', 
-            'order' => new BookClassResource($book)
+            'data' => new BookClassResource($book)
+        ]);
+    }
+
+    public function updatePrice(UpdateBookPriceRequest $request, string $id)
+    {
+        $book = BookDaerah::find($id);
+
+        if (!$book) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        $data = $request->validated();
+
+        $book->update($data);
+    
+        return response()->json([
+            'message' => 'Order updated successfully', 
+            'data' => new BookDaerahResource($book)
         ]);
     }
 }

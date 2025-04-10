@@ -31,7 +31,10 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
         Route::get('/class', [BookController::class , 'class']);
         Route::get('/stock', [BookController::class , 'stock']);
         Route::get('/stock/{id}', [BookController::class , 'stocksearch']);
-        Route::put('/update/{id}', [BookController::class , 'update']); 
+        Route::prefix('update')->group(function (){
+            Route::put('/stock/{id}', [BookController::class , 'updateStock']); 
+            Route::put('/price/{id}', [BookController::class , 'updatePrice']); 
+        });
         Route::get('/daerah/{place}', [BookController::class , 'daerahsearch']);
     });
 });

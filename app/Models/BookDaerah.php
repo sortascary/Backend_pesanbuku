@@ -12,6 +12,10 @@ class BookDaerah extends Model
 
     use HasFactory;
 
+    protected $fillable = [
+        'price'
+    ];
+
     public function book(): BelongsTo
     {
         return $this->BelongsTo(Book::class, 'book_id', 'id');

@@ -4,7 +4,7 @@ namespace App\Http\Requests\V1\Book;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateBookRequest extends FormRequest
+class UpdateBookPriceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +22,7 @@ class UpdateBookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'stock' => 'required|integer',
+            'price' => 'required|integer',
         ];
     }
 }

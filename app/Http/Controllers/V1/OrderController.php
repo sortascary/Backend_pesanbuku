@@ -84,7 +84,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'message' => 'Order created successfully', 
-                'order' => $orderPost
+                'data' => $orderPost
             ], 201);
         } catch (\Exception $e) {
             DB::rollback();
@@ -144,7 +144,7 @@ class OrderController extends Controller
     
         return response()->json([
             'message' => 'Order updated successfully', 
-            'order' => new OrderResource($order)
+            'data' => new OrderResource($order)
         ]);
     }
 
@@ -162,7 +162,7 @@ class OrderController extends Controller
     
         return response()->json([
             'message' => 'Order updated successfully', 
-            'order' => new OrderBookResource($order)
+            'data' => new OrderBookResource($order)
         ]);
     }
 
