@@ -19,7 +19,7 @@ class BookController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if ($user->role == 'admin') {
+        if ($user->role == 'distributor') {
             $daerah = BookDaerah::with('book')->get();
         } else {       
             $daerah = BookDaerah::with('book')->where('daerah', $user->daerah)->get();

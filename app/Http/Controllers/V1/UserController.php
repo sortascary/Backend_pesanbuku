@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\V1;
 
 use App\Models\User;
-
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\JsonResponse;
@@ -17,44 +16,52 @@ use App\Http\Resources\V1\UserCollection;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return new UserCollection(User::all());
     }
 
-    public function register(RegisterRequest $request) : JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
 
-        $user = new User($data);
+        // Validasi distributor_key
+        if ($data['role'] === 'distributor') {
+            $validKey = 'KEY123';
+            if (!isset($data['distributor_key']) || $data['distributor_key'] !== $validKey) {
+                return response()->json([
+                    'message' => 'Distributor Key tidak valid'
+                ], 403);
+            }
+        }
 
-        if (User::where('phone', $user->phone)->exists()) { 
+        // Cek nomor telepon
+        if (User::where('phone', $data['phone'])->exists()) {
             return response()->json([
                 'message' => 'Phone number already in use'
             ], 409);
-        }else{
-            $userpost = User::create([
-                'name' => $user->name,
-                'phone' => $user->phone,
-                'daerah' => $user->daerah,
-                'schoolName' => $user->schoolName,
-                'role' => $user->role,
-                'FCMToken' => $user->FCMToken,
-                'password' => Hash::make($data['password']),
-            ]);
-    
-            return response()->json([
-                'message' => 'User created successfully',
-                'data' => new UserResource($userpost),
-                'token' => $userpost->createToken('auth_token')->plainTextToken,
-            ], 201);
-        }        
+        }
+
+        unset($data['distributor_key']);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'phone' => $data['phone'],
+            'role' => $data['role'],
+            'FCMToken' => $data['FCMToken'] ?? null,
+            'daerah' => $data['role'] === 'sekolah' ? $data['daerah'] ?? null : null,
+            'schoolName' => $data['role'] === 'sekolah' ? $data['schoolName'] ?? null : null,
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return response()->json([
+            'message' => 'User created successfully',
+            'data' => new UserResource($user),
+            'token' => $user->createToken('auth_token')->plainTextToken,
+        ], 201);
     }
 
-    public function Login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
         $data = $request->validated();
 
@@ -71,7 +78,6 @@ class UserController extends Controller
             $user->save();
         }
 
-        // Generate authentication token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -81,44 +87,21 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function logout(Request $request) : JsonResponse
+    public function logout(Request $request): JsonResponse
     {
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => 'logout sucessful.'
-        ], 200  );
+            'message' => 'Logout successful.'
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $user = User::find($id);
-
         return new UserResource($user);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateProfileRequest $request)
     {
         $data = $request->validated();
@@ -128,25 +111,14 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        try{
-
+        try {
             $user->update($data);
-
             return response()->json([
-                'message' => 'User updated successfully', 
+                'message' => 'User updated successfully',
                 'data' => new UserResource($user)
             ]);
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

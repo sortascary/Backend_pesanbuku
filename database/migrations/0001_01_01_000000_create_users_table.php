@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('schoolName')->nullable();
             $table->string('phone')->unique();
             $table->string('password');
-            $table->enum('daerah', ['Demak', 'Jepara', 'Kudus']);
-            $table->enum('role', ['sekolah', 'admin']); 
+            $table->enum('daerah', ['Demak', 'Jepara', 'Kudus'])->nullable();
+            $table->enum('role', ['sekolah', 'distributor']); 
             $table->string('FCMToken');
             $table->rememberToken();
             $table->timestamps();
