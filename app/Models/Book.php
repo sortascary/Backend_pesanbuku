@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\BookDaerah; 
+use App\Models\BookClass;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\hasMany;

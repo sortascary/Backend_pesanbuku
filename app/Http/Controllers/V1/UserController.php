@@ -34,14 +34,7 @@ class UserController extends Controller
                 ], 403);
             }
         }
-
-        // Cek nomor telepon
-        if (User::where('phone', $data['phone'])->exists()) {
-            return response()->json([
-                'message' => 'Phone number already in use'
-            ], 409);
-        }
-
+        
         unset($data['distributor_key']);
 
         $user = User::create([
@@ -89,7 +82,7 @@ class UserController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->tokens()->delete();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Logout successful.'

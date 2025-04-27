@@ -40,9 +40,13 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
 });
 
 Route::prefix('order')->group(function (){
+
+    Route::get('/all', [OrderController::class , 'index']);
+    
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/{status}', [OrderController::class , 'search']);
         Route::post('/add', [OrderController::class , 'store']);
+        Route::get('/tagihan/{isPayed}', [OrderController::class , 'tagihan']);
     
         Route::middleware('admin')->group(function () {
             Route::put('/update/{id}', [OrderController::class , 'updateorder']);
@@ -50,8 +54,9 @@ Route::prefix('order')->group(function (){
             Route::delete('/delete/{id}', [OrderController::class , 'destroy']);
         });
     });
-    Route::get('/all', [OrderController::class , 'index']);
 });
+
+Route::get('/laporan', [OrderController::class , 'laporan']);
 
 Route::get('/notification', [NotificationController::class, 'index']);
 Route::get('/notification/{id}', [NotificationController::class, 'show']);  

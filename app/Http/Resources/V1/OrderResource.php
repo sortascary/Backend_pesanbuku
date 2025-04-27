@@ -18,6 +18,7 @@ class OrderResource extends JsonResource
             'id' => $this->id,
             'books' => OrderBookResource::collection($this->orderbook),
             'user' => new UserResource($this->user),
+            'total_book_price' => $this->total_book_price,
             'payment' => $this->payment,
             'isPayed' => $this->isPayed,
             'status' => $this->status,
