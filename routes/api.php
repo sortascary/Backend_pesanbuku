@@ -18,6 +18,7 @@ Route::prefix('user')->group(function (){
     Route::get('/AllUsers/{id}', [UserController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/get',[UserController::class, 'getuserdata']);
         Route::put('/update', [UserController::class , 'update']);
         Route::post('/logout', [UserController::class , 'logout']);
     });

@@ -114,4 +114,12 @@ class UserController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function getuserdata(Request $request){
+        $user = $request->user();
+
+        return response()->json([
+            'data' => new UserResource($user)
+        ]);
+    }
 }
