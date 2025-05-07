@@ -19,6 +19,9 @@ class BookResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'price' => $this->bookdaerah->map(function ($item) {
+                return [$item->daerah => $item->price];
+            })->values()->toArray(),
             'total_stock' => $this->bookclass->sum('stock'),
             'classes' => BookClassResource::collection($this->bookclass),
         ];

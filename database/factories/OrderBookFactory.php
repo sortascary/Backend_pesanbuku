@@ -18,9 +18,18 @@ class OrderBookFactory extends Factory
      */
     public function definition(): array
     {
+        $order = Order::inRandomOrder()->with('user')->first();
+        $userDaerah = $order->user->daerah;
+
+        $bookclass = BookClass::inRandomOrder()->with('book.bookdaerah')->first();
+
+        $matchedPrice = $bookclass->book->bookdaerah
+            ->firstWhere('daerah', $userDaerah)->price ?? 0;
+
         return [
             'order_id' => Order::inRandomOrder()->first()?->id ?? Order::factory(),
-            'book_class_id' => BookClass::inRandomOrder()->first()?->id,
+            'book_class_id' => $bookclass->id,
+            'bought_price' => $matchedPrice,
             'isDone' => $this->faker->boolean,
             'amount' => $this->faker->numberBetween(10, 20),
             'subtotal' => $this->faker->numberBetween(10000, 20000),

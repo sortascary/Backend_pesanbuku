@@ -21,6 +21,14 @@ class UserController extends Controller
         return new UserCollection(User::all());
     }
 
+    public function getuserdata(Request $request){
+        $user = $request->user();
+
+        return response()->json([
+            'data' => new UserResource($user)
+        ]);
+    }
+
     public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -95,6 +103,49 @@ class UserController extends Controller
         return new UserResource($user);
     }
 
+    public function sendResetToken(Request $request)
+    {
+        $request->validate(['phone' => 'required|exists:users,phone']);
+
+        $token = Str::random(64);
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['phone' => $request->phone],
+            [
+                'token' => Hash::make($token),
+                'created_at' => Carbon::now(),
+            ]
+        );
+
+        // TODO: Send $token via SMS
+        // For now, just return it for testing:
+        return back()->with('status', 'Reset token: ' . $token);
+    }
+
+    public function reset(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|exists:users,phone',
+            'token' => 'required',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $record = DB::table('password_reset_tokens')->where('phone', $request->phone)->first();
+
+        if (!$record || !Hash::check($request->token, $record->token)) {
+            return back()->withErrors(['token' => 'Invalid or expired token.']);
+        }
+
+        $user = User::where('phone', $request->phone)->first();
+        $user->password = Hash::make($request->password);
+        $user->remember_token = Str::random(60);
+        $user->save();
+
+        DB::table('password_reset_tokens')->where('phone', $request->phone)->delete();
+
+        return redirect()->route('login')->with('status', 'Password reset successful!');
+    }
+
     public function update(UpdateProfileRequest $request)
     {
         $data = $request->validated();
@@ -113,13 +164,5 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
-    }
-
-    public function getuserdata(Request $request){
-        $user = $request->user();
-
-        return response()->json([
-            'data' => new UserResource($user)
-        ]);
     }
 }

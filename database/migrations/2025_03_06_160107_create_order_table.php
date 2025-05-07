@@ -31,6 +31,7 @@ return new class extends Migration
             $table->foreignId('book_class_id')->constrained()->cascadeOnDelete();
             $table->boolean('isDone')->default(false); //is it packed yet
             $table->integer('amount'); 
+            $table->integer('bought_price'); 
             $table->integer('subtotal'); 
             $table->timestamps();
         });

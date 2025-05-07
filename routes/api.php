@@ -30,7 +30,7 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
 
     Route::middleware('admin')->group(function () {
         Route::get('/class', [BookController::class , 'class']);
-        Route::get('/stock', [BookController::class , 'stock']);
+        Route::get('/stock', [BookController::class , 'stock']); //specications of the book for stock page
         Route::get('/stock/{id}', [BookController::class , 'stocksearch']);
         Route::prefix('update')->group(function (){
             Route::put('/stock/{id}', [BookController::class , 'updateStock']); 
@@ -45,15 +45,16 @@ Route::prefix('order')->group(function (){
     Route::get('/all', [OrderController::class , 'index']);
     
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::get('/{status}', [OrderController::class , 'search']);
         Route::post('/add', [OrderController::class , 'store']);
         Route::get('/tagihan/{isPayed}', [OrderController::class , 'tagihan']);
-    
+        
         Route::middleware('admin')->group(function () {
             Route::put('/update/{id}', [OrderController::class , 'updateorder']);
             Route::put('/update/book/{id}', [OrderController::class , 'updatebook']);
             Route::delete('/delete/{id}', [OrderController::class , 'destroy']);
         });
+        
+        Route::get('/{status}', [OrderController::class , 'search']);
     });
 });
 

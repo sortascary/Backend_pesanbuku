@@ -17,6 +17,7 @@ class OrderBookResource extends JsonResource
         return [
             'id' => $this->id,
             'book' => new BookClassResource($this->bookclass),
+            'bought__price' => $this->bought_price,
             'amount' => $this->amount,
             'isDone' => $this->isDone,
         ];

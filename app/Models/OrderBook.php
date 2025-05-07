@@ -17,6 +17,7 @@ class OrderBook extends Model
         'book_class_id',
         'isDone',
         'amount',
+        'bought_price',
         'subtotal'
     ];
 
