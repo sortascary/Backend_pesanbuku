@@ -12,7 +12,9 @@ class BookClass extends Model
     use HasFactory;
 
     protected $fillable = [
-        'stock'
+        'book_id',
+        'stock',
+        'class'
     ];
 
     public function book(): BelongsTo

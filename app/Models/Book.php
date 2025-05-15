@@ -12,6 +12,10 @@ class Book extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name'
+    ];
+
     public function bookdaerah(): hasMany
     {
         return $this->hasMany(BookDaerah::class, 'book_id', 'id');

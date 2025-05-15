@@ -29,7 +29,8 @@ class UserFactory extends Factory
             'FCMToken' => $this->faker->uuid(),
             'schoolName' => $this->faker->company(),
             'role' => $this->faker->randomElement(['distributor', 'sekolah']),
-            'phone' => $this->faker->phoneNumber(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->unique()->numerify('08##########'),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];

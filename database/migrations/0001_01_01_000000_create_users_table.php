@@ -15,17 +15,19 @@ return new class extends Migration
             $table->id()->primary();
             $table->string('name');
             $table->string('schoolName')->nullable();
-            $table->string('phone')->unique();
+            $table->string('email')->unique();
+            $table->string('phone');
             $table->string('password');
             $table->enum('daerah', ['Demak', 'Jepara', 'Kudus'])->nullable();
             $table->enum('role', ['sekolah', 'distributor']); 
-            $table->string('FCMToken');
+            $table->string('profile')->nullable();
+            $table->string('FCMToken')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('phone')->primary();
+            $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });

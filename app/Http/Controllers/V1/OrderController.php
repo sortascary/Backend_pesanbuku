@@ -54,7 +54,6 @@ class OrderController extends Controller
             foreach ($request->books as $book) {
                 $bookClass = BookClass::findOrFail($book['book_class_id']);
 
-                // Fix bookdaerah lookup
                 $bookDaerah = $bookClass->book->bookdaerah->where('daerah', $request->daerah ?? $user?->daerah)->first();
                 if (!$bookDaerah) {
                     DB::rollback();
@@ -78,14 +77,13 @@ class OrderController extends Controller
                 $subtotal = $bookDaerah->price * $book['amount'];
                 $totalPrice += $subtotal;
 
-                $bookclass = BookClass::with('book.bookdaerah')->first();
-
-                $boughtPrice = $bookclass->book->bookdaerah
+                $boughtPrice = $bookClass->book->bookdaerah
                     ->firstWhere('daerah', $request->daerah ?? $user?->daerah)->price ?? 0;
 
                 OrderBook::create([
                     'order_id' => $orderPost->id,
                     'book_class_id' => $book['book_class_id'],
+                    'name' => $bookClass->book->name,
                     'amount' => $book['amount'],
                     'bought_price' => $boughtPrice,
                     'subtotal' => $subtotal,
@@ -156,7 +154,7 @@ class OrderController extends Controller
                     $bookClass->save();
                 }
             }
-            // Update order
+
             $order->update($data);
 
             DB::commit();
@@ -213,8 +211,6 @@ class OrderController extends Controller
                 }
             }
         }
-
-        OrderBook::where('order_id', $id)->delete();
     
         $order->delete();
     

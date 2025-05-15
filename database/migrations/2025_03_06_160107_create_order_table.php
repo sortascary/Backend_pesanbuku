@@ -24,11 +24,13 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        //TODO: the name is not gonna show up on deletion of a book (add soft delete)
         Schema::create('order_books', function (Blueprint $table) { 
             $table->id();
             $table->string('order_id');
             $table->foreign('order_id')->references('id')->on('orders')->cascadeOnDelete();
-            $table->foreignId('book_class_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('book_class_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('name');
             $table->boolean('isDone')->default(false); //is it packed yet
             $table->integer('amount'); 
             $table->integer('bought_price'); 
@@ -43,7 +45,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('order_details');
         Schema::dropIfExists('order_books');
         Schema::dropIfExists('orders');
     }

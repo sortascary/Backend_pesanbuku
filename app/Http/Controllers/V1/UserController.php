@@ -48,6 +48,7 @@ class UserController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'phone' => $data['phone'],
+            'email' => $data['email'],
             'role' => $data['role'],
             'FCMToken' => $data['FCMToken'] ?? null,
             'daerah' => $data['role'] === 'sekolah' ? $data['daerah'] ?? null : null,
@@ -66,13 +67,13 @@ class UserController extends Controller
     {
         $data = $request->validated();
 
-        if (!Auth::attempt(['phone' => $data['phone'], 'password' => $data['password']])) {
+        if (!Auth::attempt(['email' => $data['email'], 'password' => $data['password']])) {
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        $user = User::where('phone', $data['phone'])->first();
+        $user = User::where('email', $data['email'])->first();
 
         if (isset($data['FCMToken'])) {
             $user->FCMToken = $data['FCMToken'];
@@ -97,15 +98,10 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function show(string $id)
-    {
-        $user = User::find($id);
-        return new UserResource($user);
-    }
-
+    //TODO: update this this & test it
     public function sendResetToken(Request $request)
     {
-        $request->validate(['phone' => 'required|exists:users,phone']);
+        $request->validate(['email' => 'required|exists:users,email']);
 
         $token = Str::random(64);
 
@@ -122,6 +118,7 @@ class UserController extends Controller
         return back()->with('status', 'Reset token: ' . $token);
     }
 
+    //TODO: update this this & test it
     public function reset(Request $request)
     {
         $request->validate([

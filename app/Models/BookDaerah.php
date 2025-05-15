@@ -13,7 +13,9 @@ class BookDaerah extends Model
     use HasFactory;
 
     protected $fillable = [
-        'price'
+        'book_id',
+        'price',
+        'daerah'
     ];
 
     public function book(): BelongsTo

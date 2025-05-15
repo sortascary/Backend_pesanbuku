@@ -15,7 +15,6 @@ Route::prefix('user')->group(function (){
     Route::post('/register', [UserController::class , 'register']);
     Route::post('/login', [UserController::class , 'login']);
     Route::get('/AllUsers', [UserController ::class, 'index']);
-    Route::get('/AllUsers/{id}', [UserController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/get',[UserController::class, 'getuserdata']);
@@ -30,8 +29,12 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
 
     Route::middleware('admin')->group(function () {
         Route::get('/class', [BookController::class , 'class']);
-        Route::get('/stock', [BookController::class , 'stock']); //specications of the book for stock page
+        Route::get('/stock', [BookController::class , 'stock']); //specifications of the book for stock page
         Route::get('/stock/{id}', [BookController::class , 'stocksearch']);
+        Route::prefix('create')->group(function (){
+            Route::post('/', [BookController::class , 'createBook']); 
+            Route::post('/stock', [BookController::class , 'createClass']); 
+        });
         Route::prefix('update')->group(function (){
             Route::put('/stock/{id}', [BookController::class , 'updateStock']); 
             Route::put('/price/{id}', [BookController::class , 'updatePrice']); 

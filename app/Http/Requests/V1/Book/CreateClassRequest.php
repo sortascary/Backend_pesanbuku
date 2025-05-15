@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\V1\User;
+namespace App\Http\Requests\V1\Book;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class CreateClassRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => 'required|string',
-            'password' => 'required|string|min:8',
-            'FCMToken' => 'nullable|string'
+            'book_id' => 'required|string|max:255',
+            'stock' => 'required|integer|min:1',
+            'class' => 'required|integer|min:1',
         ];
     }
 }

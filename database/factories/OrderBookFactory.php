@@ -29,6 +29,7 @@ class OrderBookFactory extends Factory
         return [
             'order_id' => Order::inRandomOrder()->first()?->id ?? Order::factory(),
             'book_class_id' => $bookclass->id,
+            'name' => $bookclass->book->name,
             'bought_price' => $matchedPrice,
             'isDone' => $this->faker->boolean,
             'amount' => $this->faker->numberBetween(10, 20),
