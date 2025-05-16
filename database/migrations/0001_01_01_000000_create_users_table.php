@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->enum('daerah', ['Demak', 'Jepara', 'Kudus'])->nullable();
             $table->enum('role', ['sekolah', 'distributor']); 
-            $table->string('profile')->nullable();
+            $table->string('image')->nullable();
             $table->string('FCMToken')->nullable();
             $table->rememberToken();
             $table->timestamps();

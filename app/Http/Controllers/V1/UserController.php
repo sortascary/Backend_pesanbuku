@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\V1;
 
 use App\Models\User;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\JsonResponse;
@@ -153,7 +155,17 @@ class UserController extends Controller
         }
 
         try {
+            if ($request->hasFile('image')) {
+                if ($user->image && Storage::disk('public')->exists($user->image)) {
+                    Storage::disk('public')->delete($user->image);
+                }
+                $filename = Str::uuid() . '.' . $request->file('image')->getClientOriginalExtension();
+                $path = $request->file('image')->storeAs('images', $filename, 'public');
+                $data['image'] = $path;
+            }
+
             $user->update($data);
+
             return response()->json([
                 'message' => 'User updated successfully',
                 'data' => new UserResource($user)
@@ -162,4 +174,5 @@ class UserController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
 }

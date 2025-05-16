@@ -7,10 +7,6 @@ use App\Http\Controllers\V1\BookController;
 use App\Http\Controllers\V1\OrderController;
 use App\Http\Controllers\V1\NotificationController;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
 Route::prefix('user')->group(function (){
     Route::post('/register', [UserController::class , 'register']);
     Route::post('/login', [UserController::class , 'login']);

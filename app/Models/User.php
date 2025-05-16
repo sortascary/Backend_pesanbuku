@@ -19,7 +19,7 @@ class User extends Authenticatable
         'role',
         'daerah',
         'schoolName',
-        'profile',
+        'image',
         'FCMToken',
     ];
 

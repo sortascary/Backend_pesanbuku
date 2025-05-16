@@ -24,6 +24,7 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name' => 'nullable|string',
             'schoolName' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120' //max size is 5MB
         ];
     }
 }
