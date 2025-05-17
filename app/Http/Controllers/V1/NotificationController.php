@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1;
 use App\Models\User;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Http\Requests\V1\Notification\CreateNotificationRequest;
 use App\Http\Controllers\Controller;
 
 class NotificationController extends Controller
@@ -12,18 +13,31 @@ class NotificationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $notification = Notification::all();
+        $user = $request->user();
+
+        $notification = Notification::where('user_id', $user->id);
         return $notification;
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(CreateNotificationRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        $notification = Notification::create([
+            'message' => $validated['message'],
+            'sub_message' => $validated['sub_message'],
+            'user_id' => $validated['user_id'],
+        ]);
+
+        return response()->json([
+            'message' => 'Notification created successfully',
+            'data' => $notification
+        ], 201);
     }
 
     /**

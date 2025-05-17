@@ -56,6 +56,11 @@ class BookController extends Controller
         return BookOrderResource::collection($daerah);
     }
 
+    public function orderSearch(Request $request, string $daerah)
+    {
+        $daerah = BookDaerah::with('book')->where('daerah',  $daerah)->get();
+        return BookOrderResource::collection($daerah);
+    }
 
     public function daerahsearch(string $place)
     {

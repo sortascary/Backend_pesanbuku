@@ -7,6 +7,9 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use Kreait\Laravel\Firebase\Facades\Firebase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -103,44 +106,53 @@ class UserController extends Controller
     //TODO: update this this & test it
     public function sendResetToken(Request $request)
     {
-        $request->validate(['email' => 'required|exists:users,email']);
+        $user = $request->user();
 
         $token = Str::random(64);
 
         DB::table('password_reset_tokens')->updateOrInsert(
-            ['phone' => $request->phone],
+            ['email' => $user->email],
             [
                 'token' => Hash::make($token),
                 'created_at' => Carbon::now(),
             ]
         );
+        
+        $fcmToken = $user->fcm_token;
 
-        // TODO: Send $token via SMS
-        // For now, just return it for testing:
-        return back()->with('status', 'Reset token: ' . $token);
+        if ($fcmToken) {
+            $messaging = Firebase::messaging();
+
+            $message = CloudMessage::withTarget('token', $fcmToken)
+                ->withNotification(Notification::create('Reset Password', 'Your reset token is: ' . $token));
+
+            $messaging->send($message);
+        }
+
+        return back()->with('status', 'Reset token sent via FCM (and shown here for test): ' . $token);
     }
 
     //TODO: update this this & test it
     public function reset(Request $request)
     {
         $request->validate([
-            'phone' => 'required|exists:users,phone',
+            'email' => 'required|exists:users,email',
             'token' => 'required',
             'password' => 'required|min:8|confirmed',
         ]);
 
-        $record = DB::table('password_reset_tokens')->where('phone', $request->phone)->first();
+        $record = DB::table('password_reset_tokens')->where('email', $request->email)->first();
 
         if (!$record || !Hash::check($request->token, $record->token)) {
             return back()->withErrors(['token' => 'Invalid or expired token.']);
         }
 
-        $user = User::where('phone', $request->phone)->first();
+        $user = User::where('email', $request->email)->first();
         $user->password = Hash::make($request->password);
         $user->remember_token = Str::random(60);
         $user->save();
 
-        DB::table('password_reset_tokens')->where('phone', $request->phone)->delete();
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return redirect()->route('login')->with('status', 'Password reset successful!');
     }

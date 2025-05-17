@@ -21,7 +21,10 @@ Route::prefix('user')->group(function (){
 
 Route::prefix('book')->middleware('auth:sanctum')->group(function (){
     Route::get('/', [BookController::class , 'index']);//for the books page
-    Route::get('/order', [BookController::class , 'order']);//the items in the order page
+    Route::prefix('order')->group(function () {
+        Route::get('/', [BookController::class, 'order']); //the items in the order page (sekolah)
+        Route::get('/{daerah}', [BookController::class, 'orderSearch']); //the items in the order page (distributor)
+    });
 
     Route::middleware('admin')->group(function () {
         Route::get('/class', [BookController::class , 'class']);
@@ -59,5 +62,8 @@ Route::prefix('order')->group(function (){
 
 Route::get('/laporan', [OrderController::class , 'laporan']);
 
-Route::get('/notification', [NotificationController::class, 'index']);
-Route::get('/notification/{id}', [NotificationController::class, 'show']);  
+Route::prefix('notification')->group(function (){
+    Route::get('/', [NotificationController::class, 'index'])->middleware(['auth:sanctum']);   
+    Route::get('/{id}', [NotificationController::class, 'show']);  
+});
+
