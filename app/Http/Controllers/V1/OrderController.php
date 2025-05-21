@@ -21,10 +21,20 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $order = Order::with('user', 'orderbook')->orderBy('created_at', 'desc')->get();
-        return OrderResource::collection($order);
+        $user = $request->user();
+
+        if ($user->role == 'distributor') {
+            $orders = Order::with(['user', 'orderbook'])
+            ->get();
+        } else {       
+            $orders = Order::with(['user', 'orderbook'])
+            ->where('user_id', $user->id)
+            ->get();
+        }
+
+        return OrderResource::collection($orders);
     }
 
     /**

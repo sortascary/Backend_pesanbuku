@@ -44,9 +44,9 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
 
 Route::prefix('order')->group(function (){
 
-    Route::get('/all', [OrderController::class , 'index']);
     
     Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [OrderController::class , 'index']);
         Route::post('/add', [OrderController::class , 'store']);
         Route::get('/tagihan/{isPayed}', [OrderController::class , 'tagihan']);
         
