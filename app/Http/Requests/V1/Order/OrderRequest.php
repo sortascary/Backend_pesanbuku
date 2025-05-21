@@ -26,7 +26,6 @@ class OrderRequest extends FormRequest
             'schoolName' => 'nullable|string',
             'daerah' => 'nullable|string',
             'payment' => 'required|string',
-            'isPayed' => 'nullable|bool',
             'status' => 'required|string',
             'books' => 'required|array|min:1',
             'books.*.book_class_id' => 'required|exists:book_classes,id',

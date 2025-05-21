@@ -39,7 +39,6 @@ class Order extends Model
         'schoolName', 
         'daerah', 
         'payment',
-        'isPayed',
         'status',
         'total_book_price',
     ];

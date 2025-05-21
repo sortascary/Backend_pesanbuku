@@ -20,6 +20,7 @@ class BookResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'prices' => $this->bookdaerah->map(fn($item) => [
+                'price_id' => $item->id,
                 'daerah' => $item->daerah,
                 'price' => $item->price,
             ])->values()->toArray(),

@@ -25,7 +25,6 @@ class OrderFactory extends Factory
             'schoolName' => $user->schoolName,
             'daerah' => $user->daerah,
             'payment' => $this->faker->randomElement(['cash', 'transfer', 'angsuran']),
-            'isPayed' => $this->faker->boolean,
             'status' => $this->faker->randomElement(['diPesan', 'diProses', 'done']),
             'total_book_price' => $this->faker->numberBetween(10000, 20000),
         ];

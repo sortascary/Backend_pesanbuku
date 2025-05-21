@@ -23,7 +23,6 @@ class UpdateOrderRequest extends FormRequest
     {
         return [
             'status' => 'required|string',
-            'isPayed' => 'required|boolean',
         ];
     }
 }

@@ -44,7 +44,6 @@ class OrderController extends Controller
                 'schoolName' => $request->schoolName ?? $user?->schoolName,
                 'daerah' => $request->daerah ?? $user?->daerah,
                 'payment' => $request->payment,
-                'isPayed' => $request->isPayed ?? false,
                 'status' => $request->status,
                 'total_book_price' => 0,
             ]);
@@ -52,7 +51,7 @@ class OrderController extends Controller
             $totalPrice = 0;
 
             foreach ($request->books as $book) {
-                $bookClass = BookClass::findOrFail($book['book_class_id']);
+                $bookClass = BookClass::with('book')->findOrFail($book['book_class_id'])->first();
 
                 $bookDaerah = $bookClass->book->bookdaerah->where('daerah', $request->daerah ?? $user?->daerah)->first();
                 if (!$bookDaerah) {
@@ -100,7 +99,8 @@ class OrderController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage(),
+        'huh' => $bookClass->book->name,], 500);
         }
     }
 
