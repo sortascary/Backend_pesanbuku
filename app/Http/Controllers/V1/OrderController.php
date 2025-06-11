@@ -49,7 +49,7 @@ class OrderController extends Controller
             $user = $request->user();
 
             $orderPost = Order::create([
-                'user_id' => $user->id,
+                'user_id' => $user->role == "sekolah"? $user->id : null,
                 'phone' => $request->phone ?? $user?->phone,
                 'schoolName' => $request->schoolName ?? $user?->schoolName,
                 'daerah' => $request->daerah ?? $user?->daerah,
@@ -61,7 +61,7 @@ class OrderController extends Controller
             $totalPrice = 0;
 
             foreach ($request->books as $book) {
-                $bookClass = BookClass::with('book')->findOrFail($book['book_class_id'])->first();
+                $bookClass = BookClass::with('book.bookdaerah')->findOrFail($book['book_class_id']);
 
                 $bookDaerah = $bookClass->book->bookdaerah->where('daerah', $request->daerah ?? $user?->daerah)->first();
                 if (!$bookDaerah) {
@@ -78,16 +78,14 @@ class OrderController extends Controller
                             'error' => "Insufficient stock for book_class_id: " . $book['book_class_id']
                         ], 400);
                     }
-                
+
                     $bookClass->stock -= $book['amount'];
                     $bookClass->save();
                 }
 
-                $subtotal = $bookDaerah->price * $book['amount'];
+                $boughtPrice = $bookDaerah->price ?? 0;
+                $subtotal = $boughtPrice * $book['amount'];
                 $totalPrice += $subtotal;
-
-                $boughtPrice = $bookClass->book->bookdaerah
-                    ->firstWhere('daerah', $request->daerah ?? $user?->daerah)->price ?? 0;
 
                 OrderBook::create([
                     'order_id' => $orderPost->id,
@@ -99,6 +97,7 @@ class OrderController extends Controller
                 ]);
             }
 
+
             $orderPost->update(['total_book_price' => $totalPrice]);
 
             DB::commit();
@@ -109,9 +108,12 @@ class OrderController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['error' => $e->getMessage(),
-        'huh' => $bookClass->book->name,], 500);
+            return response()->json([
+                'error' => $e->getMessage(),
+                'debug' => isset($bookClass) ? ($bookClass->book->name ?? 'N/A') : 'Book class not set',
+            ], 500);
         }
+
     }
 
     public function search(Request $request, string $status)

@@ -16,13 +16,14 @@ class OrderResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'books' => OrderBookResource::collection($this->orderbook),
-            'schoolName' => $this -> schoolName,
+            'user' => new UserResource($this->user),
             'phone' => $this -> phone,
+            'schoolName' => $this -> schoolName,
             'daerah' => $this -> daerah,
-            'total_book_price' => $this->total_book_price,
             'payment' => $this->payment,
             'status' => $this->status,
+            'total_book_price' => $this->total_book_price,
+            'books' => OrderBookResource::collection($this->orderbook),
         ];
     }
 }
