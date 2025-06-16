@@ -6,14 +6,17 @@ use App\Http\Controllers\V1\UserController;
 use App\Http\Controllers\V1\BookController;
 use App\Http\Controllers\V1\OrderController;
 use App\Http\Controllers\V1\NotificationController;
+use Illuminate\Support\Facades\URL;
 
 Route::prefix('user')->group(function (){
     Route::post('/register', [UserController::class , 'register']);
     Route::post('/login', [UserController::class , 'login']);
-    Route::get('/AllUsers', [UserController ::class, 'index']);
+    Route::get('/AllUsers', [UserController::class, 'index']);
+    Route::get('/verify/{id}/{hash}', [UserController::class, 'verify'])->middleware('signed')->name('verification.verify');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/get',[UserController::class, 'getuserdata']);
+        Route::get('/verification-notification', [UserController::class, 'sendVerification'])->middleware(['throttle:6,1'])->name('verification.send');
         Route::put('/update', [UserController::class , 'update']);
         Route::post('/logout', [UserController::class , 'logout']);
     });
@@ -43,7 +46,6 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
 });
 
 Route::prefix('order')->group(function (){
-
     
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [OrderController::class , 'index']);

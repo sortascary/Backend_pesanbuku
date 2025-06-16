@@ -15,8 +15,8 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|',
-            'email' => 'required|string|unique:users',
+            'phone' => 'required|string',
+            'email' => 'required|string',
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:sekolah,distributor',
             'FCMToken' => 'nullable|string|max:255',

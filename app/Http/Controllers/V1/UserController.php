@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\V1;
 
+use Illuminate\Support\Facades\Log;
+
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification;
-use Kreait\Laravel\Firebase\Facades\Firebase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Verified;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\User\LoginRequest;
 use App\Http\Requests\V1\User\RegisterRequest;
@@ -38,6 +38,14 @@ class UserController extends Controller
     {
         $data = $request->validated();
 
+        $userexist = User::where('email', $data['email'])->first();
+
+        if ($userexist && $userexist->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Email sudah digunakan.',
+            ], 409);
+        }
+
         // Validasi distributor_key
         if ($data['role'] === 'distributor') {
             $validKey = 'KEY123';
@@ -49,20 +57,36 @@ class UserController extends Controller
         }
         
         unset($data['distributor_key']);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'phone' => $data['phone'],
-            'email' => $data['email'],
-            'role' => $data['role'],
-            'FCMToken' => $data['FCMToken'] ?? null,
-            'daerah' => $data['role'] === 'sekolah' ? $data['daerah'] ?? null : null,
-            'schoolName' => $data['role'] === 'sekolah' ? $data['schoolName'] ?? null : null,
-            'password' => Hash::make($data['password']),
-        ]);
-
+        
+        if ($userexist){
+            $userexist->update([
+                'name' => $data['name'],
+                'phone' => $data['phone'],
+                'role' => $data['role'],
+                'FCMToken' => $data['FCMToken'] ?? null,
+                'daerah' => $data['role'] === 'sekolah' ? $data['daerah'] ?? null : null,
+                'schoolName' => $data['role'] === 'sekolah' ? $data['schoolName'] ?? null : null,
+                'password' => Hash::make($data['password']),
+            ]);
+            $user = $userexist;
+        } else {
+            $user = User::create([
+                'name' => $data['name'],
+                'phone' => $data['phone'],
+                'email' => $data['email'],
+                'role' => $data['role'],
+                'FCMToken' => $data['FCMToken'] ?? null,
+                'daerah' => $data['role'] === 'sekolah' ? $data['daerah'] ?? null : null,
+                'schoolName' => $data['role'] === 'sekolah' ? $data['schoolName'] ?? null : null,
+                'password' => Hash::make($data['password']),
+            ]);
+        }
+        
+        
+        $user->sendEmailVerificationNotification();
+        
         return response()->json([
-            'message' => 'User created successfully',
+            'message' => 'User created successfully. Check your email for verification link.',
             'data' => new UserResource($user),
             'token' => $user->createToken('auth_token')->plainTextToken,
         ], 201);
@@ -103,6 +127,50 @@ class UserController extends Controller
         ], 200);
     }
 
+    public function verify(Request $request, $id, $hash)
+    {
+        if (! $request->hasValidSignature()) {
+            return view('Verify', [
+                'message' => 'Invalid or expired link',
+                'success' => false
+            ]);
+        }
+
+        $user = User::findOrFail($id);
+
+        if ($user->hasVerifiedEmail()) {
+            return view('Verify', [
+                'message' => 'User is already verified',
+                'success' => false
+            ]);
+        }
+
+        if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+            return view('Verify', [
+                'message' => 'Invalid credentials/data',
+                'success' => false
+            ]);
+        }
+
+        $user->markEmailAsVerified();
+        event(new Verified($user));
+
+        return view('Verify', [
+            'message' => 'Successfully verified your email',
+            'success' => true
+        ]);
+    }
+
+    public function sendVerification(Request $request){
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Already verified'], 400);
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Verification link sent!']);
+    }
+
     //TODO: update this this & test it
     public function sendResetToken(Request $request)
     {
@@ -118,16 +186,16 @@ class UserController extends Controller
             ]
         );
         
-        $fcmToken = $user->fcm_token;
+        // $fcmToken = $user->fcm_token;
 
-        if ($fcmToken) {
-            $messaging = Firebase::messaging();
+        // if ($fcmToken) {
+        //     $messaging = Firebase::messaging();
 
-            $message = CloudMessage::withTarget('token', $fcmToken)
-                ->withNotification(Notification::create('Reset Password', 'Your reset token is: ' . $token));
+        //     $message = CloudMessage::withTarget('token', $fcmToken)
+        //         ->withNotification(Notification::create('Reset Password', 'Your reset token is: ' . $token));
 
-            $messaging->send($message);
-        }
+        //     $messaging->send($message);
+        // }
 
         return back()->with('status', 'Reset token sent via FCM (and shown here for test): ' . $token);
     }
