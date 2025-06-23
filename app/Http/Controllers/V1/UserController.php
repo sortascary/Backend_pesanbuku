@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -13,9 +14,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use App\Http\Requests\V1\User\LoginRequest;
 use App\Http\Requests\V1\User\RegisterRequest;
 use App\Http\Requests\V1\User\UpdateProfileRequest;
+use App\Http\Requests\V1\User\PasswordResetRequest;
 use App\Http\Resources\V1\UserResource;
 use App\Http\Resources\V1\UserCollection;
 
@@ -82,9 +85,6 @@ class UserController extends Controller
             ]);
         }
         
-        
-        $user->sendEmailVerificationNotification();
-        
         return response()->json([
             'message' => 'User created successfully. Check your email for verification link.',
             'data' => new UserResource($user),
@@ -129,7 +129,7 @@ class UserController extends Controller
 
     public function verify(Request $request, $id, $hash)
     {
-        if (! $request->hasValidSignature()) {
+        if (!$request->hasValidSignature()) {
             return view('Verify', [
                 'message' => 'Invalid or expired link',
                 'success' => false
@@ -171,58 +171,53 @@ class UserController extends Controller
         return response()->json(['message' => 'Verification link sent!']);
     }
 
-    //TODO: update this this & test it
     public function sendResetToken(Request $request)
     {
-        $user = $request->user();
-
-        $token = Str::random(64);
-
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $user->email],
-            [
-                'token' => Hash::make($token),
-                'created_at' => Carbon::now(),
-            ]
-        );
-        
-        // $fcmToken = $user->fcm_token;
-
-        // if ($fcmToken) {
-        //     $messaging = Firebase::messaging();
-
-        //     $message = CloudMessage::withTarget('token', $fcmToken)
-        //         ->withNotification(Notification::create('Reset Password', 'Your reset token is: ' . $token));
-
-        //     $messaging->send($message);
-        // }
-
-        return back()->with('status', 'Reset token sent via FCM (and shown here for test): ' . $token);
-    }
-
-    //TODO: update this this & test it
-    public function reset(Request $request)
-    {
         $request->validate([
-            'email' => 'required|exists:users,email',
-            'token' => 'required',
-            'password' => 'required|min:8|confirmed',
+            'email' => 'required|exists:users,email'
         ]);
 
-        $record = DB::table('password_reset_tokens')->where('email', $request->email)->first();
+        
+        $status = Password::sendResetLink(['email' => $request->email]);
 
-        if (!$record || !Hash::check($request->token, $record->token)) {
-            return back()->withErrors(['token' => 'Invalid or expired token.']);
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['message' => __($status)])
+            : response()->json(['message' => __($status)], 400);
+    }
+
+    public function resetRedirect(Request $request, $email, $token)
+    {
+        $url = "pesanbuku://reset-password?token=$token&email=" . urlencode($email);
+
+        return view('ResetPass', [
+            'appUrl' => $url,
+            'message' => 'Please click the link to open the app.'
+        ]);
+    }
+
+
+    public function reset(PasswordResetRequest $request)
+    {
+        $data = $request->validated();
+
+        $record = DB::table('password_reset_tokens')->where('email', $data['email'])->first();
+
+        if (!$record || !Hash::check($data['token'], $record->token)) {
+            return response()->json(['message' => 'Invalid or expired token.'], 400);
         }
 
-        $user = User::where('email', $request->email)->first();
-        $user->password = Hash::make($request->password);
+        $user = User::where('email', $data['email'])->first();
+        $user->password = Hash::make($data['password']);
         $user->remember_token = Str::random(60);
         $user->save();
 
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+        DB::table('password_reset_tokens')->where('email', $data['email'])->delete();
 
-        return redirect()->route('login')->with('status', 'Password reset successful!');
+        return response()->json([
+            'message' => 'it worked',
+            'data' => new UserResource($user),
+        ]);
     }
 
     public function update(UpdateProfileRequest $request)

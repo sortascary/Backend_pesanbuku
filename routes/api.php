@@ -12,7 +12,10 @@ Route::prefix('user')->group(function (){
     Route::post('/register', [UserController::class , 'register']);
     Route::post('/login', [UserController::class , 'login']);
     Route::get('/AllUsers', [UserController::class, 'index']);
-    Route::get('/verify/{id}/{hash}', [UserController::class, 'verify'])->middleware('signed')->name('verification.verify');
+    Route::get('/verify/{id}/{hash}', [UserController::class, 'verify'])->name('verification.verify');
+    Route::post('/forgot-password', [UserController::class, 'sendResetToken'])->middleware(['throttle:6,1']);
+    Route::post('/reset-password', [UserController::class, 'reset']);
+    Route::get('/reset-verify/{email}/{token}', [UserController::class, 'resetRedirect']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/get',[UserController::class, 'getuserdata']);
