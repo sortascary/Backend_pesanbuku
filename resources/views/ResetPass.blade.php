@@ -8,15 +8,26 @@
         <!-- Include Tailwind CSS -->
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <script>
+            redirectButton =  document.getElementById('redirectBtn');
+
             window.onload = function () {
                 // Attempt to open app
                 window.location.href = "{!! $appUrl !!}";
 
                 // Optional: fallback timeout if app isn't installed
                 setTimeout(function () {
-                    window.location.href = "https://yourdomain.com/reset-done";
+                    document.getElementById('fallback').style.display = 'block';
                 }, 3000);
-            }
+            }            
+
+            redirectButton.addEventListener('click', function () {
+                window.location.href = "{!! $appUrl !!}";
+
+                // Optional: fallback timeout if app isn't installed
+                setTimeout(function () {
+                    document.getElementById('fallback').style.display = 'block';
+                }, 3000);
+            });
         </script>
     </head>
     <body class=" bg-gradient-to-t from-yellow-100 to-white">
@@ -25,10 +36,18 @@
             <main class="text-center flex flex-col justify-center items-center h-screen border-yellow-500 border-2 border-r-8 border-b-8 rounded">
 
                 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 ">
-                    <h1 class="sm:text-xl lg:text-3xl">{{$message}}</h1>
+                    <h1 class="sm:text-xl lg:text-3xl">{{$message}}</h1>                    
                 </div>
-                <p class="text-gray-500">you may now close this window</p>
-
+                <button id="redirectBtn" 
+                        class="redirectBtn"
+                        type="button inline-flex items-center"
+                        >
+                        Open in app
+                    </button>
+                <p class="text-gray-500 mt-4">
+                    If you were not redirected, click the button or open this link manually:<br>
+                    <a href="{!! $appUrl !!}" class="text-blue-500 underline">{!! $appUrl !!}</a>
+                </p>
             </main>
         </div>
     </body>

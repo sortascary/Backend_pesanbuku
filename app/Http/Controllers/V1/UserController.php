@@ -192,7 +192,7 @@ class UserController extends Controller
 
         return view('ResetPass', [
             'appUrl' => $url,
-            'message' => 'Please click the link to open the app.'
+            'message' => 'Redirecting to the app.'
         ]);
     }
 

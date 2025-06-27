@@ -26,13 +26,15 @@ class OrderController extends Controller
         $user = $request->user();
 
         if ($user->role == 'distributor') {
-            $orders = Order::with(['user', 'orderbook'])
-            ->get();
+            $query = Order::with(['user', 'orderbook'])
+            ->orderByDesc('created_at');
         } else {       
-            $orders = Order::with(['user', 'orderbook'])
+            $query = Order::with(['user', 'orderbook'])
             ->where('user_id', $user->id)
-            ->get();
+            ->orderByDesc('created_at');
         }
+
+        $orders = $query->paginate(20);
 
         return OrderResource::collection($orders);
     }
@@ -123,12 +125,14 @@ class OrderController extends Controller
         if ($user->role == 'distributor') {
             $orders = Order::with(['user', 'orderbook'])
             ->where('status', $status)
-            ->get();
+            ->orderByDesc('created_at')
+            ->paginate(10);
         } else {       
             $orders = Order::with(['user', 'orderbook'])
             ->where('user_id', $user->id)
             ->where('status', $status)
-            ->get();
+            ->orderByDesc('created_at')
+            ->paginate(10);
         }
 
         return OrderResource::collection($orders);
@@ -139,7 +143,7 @@ class OrderController extends Controller
      */
     public function updateorder(UpdateOrderRequest $request, string $id)
     {
-        $order = Order::with('orderbooks.bookclass')->find($id);
+        $order = Order::with('orderbook.bookclass')->find($id);
         
         if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
@@ -152,7 +156,7 @@ class OrderController extends Controller
         try {
             // If status is changing to 'diproses', deduct stock
             if ($order->status !== 'diproses' && $data['status'] == 'diproses') {
-                foreach ($order->orderbooks as $orderBook) {
+                foreach ($order->orderbook as $orderBook) {
                     $bookClass = $orderBook->bookclass;
 
                     if ($bookClass->stock < $orderBook->amount) {

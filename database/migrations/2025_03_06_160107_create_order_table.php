@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('daerah', ['Demak', 'Jepara', 'Kudus']);
             $table->enum('payment', ['cash', 'transfer', 'angsuran']);
             $table->enum('status', ['dipesan', 'diproses', 'done'])->default('dipesan');
+            $table->boolean('isPayed')->default(false); 
             $table->integer('total_book_price'); 
             $table->timestamps();
         });
