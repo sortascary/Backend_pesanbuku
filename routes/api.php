@@ -8,6 +8,9 @@ use App\Http\Controllers\V1\OrderController;
 use App\Http\Controllers\V1\NotificationController;
 use Illuminate\Support\Facades\URL;
 
+//for the admin dashboard
+Route::get('/init', [OrderController::class , 'init']);
+
 Route::prefix('user')->group(function (){
     Route::post('/register', [UserController::class , 'register']);
     Route::post('/login', [UserController::class , 'login']);
@@ -46,7 +49,7 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
         });        
         Route::prefix('delete')->group(function (){
             Route::delete('/stock/{id}', [BookController::class , 'deleteClass']); 
-            Route::delete('/price/{id}', [BookController::class , 'deleteBook']); 
+            Route::delete('/book/{id}', [BookController::class , 'deleteBook']); 
         });
         Route::get('/daerah/{place}', [BookController::class , 'daerahsearch']);
     });

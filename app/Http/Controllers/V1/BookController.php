@@ -164,7 +164,7 @@ class BookController extends Controller
             return response()->json(['message' => 'Book not found'], 404);
         }
         
-        $book->delete();
+        $book->book->delete();
     
         return response()->json(['message' => 'Book deleted successfully']);
     }

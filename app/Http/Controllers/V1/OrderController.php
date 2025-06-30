@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\OrderBook;
 use App\Models\BookClass;
 
+use App\Models\Book;
+
 use Illuminate\Http\Request;
 use App\Http\Resources\V1\OrderResource;
 use App\Http\Resources\V1\OrderBookResource;
@@ -37,6 +39,21 @@ class OrderController extends Controller
         $orders = $query->paginate(20);
 
         return OrderResource::collection($orders);
+    }
+
+    public function init(Request $request)
+    {
+        $TotalBook = Book::count();
+        $TotalStock = BookClass::sum('stock');
+        $ORDPesan = Order::where('status', 'dipesan')->count();
+        $ORDProses = Order::where('status', 'diproses')->count();
+
+        return response()->json([
+                'book' => $TotalBook,
+                'stock' => $TotalStock,
+                'dipesan' => $ORDPesan,
+                'diproses' => $ORDProses
+            ], 201);
     }
 
     /**
