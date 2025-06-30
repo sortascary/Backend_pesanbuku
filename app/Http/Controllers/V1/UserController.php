@@ -85,6 +85,8 @@ class UserController extends Controller
             ]);
         }
         
+        $user->sendEmailVerificationNotification();
+        
         return response()->json([
             'message' => 'User created successfully. Check your email for verification link.',
             'data' => new UserResource($user),

@@ -43,6 +43,10 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
         Route::prefix('update')->group(function (){
             Route::put('/stock/{id}', [BookController::class , 'updateStock']); 
             Route::put('/price/{id}', [BookController::class , 'updatePrice']); 
+        });        
+        Route::prefix('delete')->group(function (){
+            Route::delete('/stock/{id}', [BookController::class , 'deleteClass']); 
+            Route::delete('/price/{id}', [BookController::class , 'deleteBook']); 
         });
         Route::get('/daerah/{place}', [BookController::class , 'daerahsearch']);
     });
