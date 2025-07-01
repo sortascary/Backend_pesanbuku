@@ -17,6 +17,7 @@ use App\Http\Requests\V1\Order\OrderRequest;
 use App\Http\Requests\V1\Order\UpdateOrderRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class OrderController extends Controller
 {
@@ -47,13 +48,37 @@ class OrderController extends Controller
         $TotalStock = BookClass::sum('stock');
         $ORDPesan = Order::where('status', 'dipesan')->count();
         $ORDProses = Order::where('status', 'diproses')->count();
+        $sixMonthsAgo = Carbon::now()->subMonths(6);
+
+        $ordersQuery->where(function ($query) use ($sixMonthsAgo) {
+                $query->where(function ($q) {
+                    $q->where('status', '!=', 'done');
+                })->orWhere(function ($q) use ($sixMonthsAgo) {
+                    $q->where('payment', 'angsuran')
+                    ->where('status', 'done')
+                    ->where('updated_at', '>=', $sixMonthsAgo);
+                });
+            });
+
+        $TotalTagihan = Order::where(function ($query) use ($sixMonthsAgo) {
+                $query->where(function ($q) {
+                    $q->where('status', '!=', 'done');
+                })->orWhere(function ($q) use ($sixMonthsAgo) {
+                    $q->where('payment', 'angsuran')
+                    ->where('status', 'done')
+                    ->where('updated_at', '>=', $sixMonthsAgo);
+                });
+            })->count();
+
+
 
         return response()->json([
                 'book' => $TotalBook,
                 'stock' => $TotalStock,
                 'dipesan' => $ORDPesan,
-                'diproses' => $ORDProses
-            ], 201);
+                'diproses' => $ORDProses,
+                'tagihan' => $TotalTagihan,
+            ], 200);
     }
 
     /**
@@ -262,17 +287,49 @@ class OrderController extends Controller
         return new LaporanResource($orders);
     }
 
-    public function tagihan(Request $request, string $isPayed){
-
+    public function tagihan(Request $request, string $isPayed)
+    {
         $user = $request->user();
 
         $isPayedBool = filter_var($isPayed, FILTER_VALIDATE_BOOLEAN);
- 
-        $orders = Order::with(['user', 'orderbook'])
-        ->where('user_id', $user->id)
-        ->where('isPayed', $isPayedBool)
-        ->get();
+        $sixMonthsAgo = Carbon::now()->subMonths(6);
+
+        $ordersQuery = Order::with(['user', 'orderbook']);
+
+        if ($isPayedBool) {
+            $ordersQuery->where('status', 'done')
+                ->where(function ($query) use ($sixMonthsAgo) {
+                    $query->where('payment', '!=', 'angsuran')
+                        ->orWhere(function ($q) use ($sixMonthsAgo) {
+                            $q->where('payment', 'angsuran')
+                                ->where('updated_at', '<', $sixMonthsAgo);
+                        });
+                });
+        } else {
+            $ordersQuery->where(function ($query) use ($sixMonthsAgo) {
+                $query->where(function ($q) {
+                    $q->where('status', '!=', 'done');
+                })->orWhere(function ($q) use ($sixMonthsAgo) {
+                    $q->where('payment', 'angsuran')
+                    ->where('status', 'done')
+                    ->where('updated_at', '>=', $sixMonthsAgo);
+                });
+            });
+        }
+
+        //Role filtering
+        if ($user->role === 'distributor') {
+            // no restriction
+        } elseif ($user->role === 'sekolah') {
+            $ordersQuery->where('user_id', $user->id);
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $orders = $ordersQuery->get();
 
         return OrderResource::collection($orders);
     }
+
+
 }
