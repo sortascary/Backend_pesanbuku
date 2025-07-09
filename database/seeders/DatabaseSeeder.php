@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory(10)->create();
-        Notification::factory(15)->create();
 
         $regions = ['Demak', 'Jepara', 'Kudus'];
         $books =  ['Pendidikan pancasila', 'Bahasa Indonesia', 'Matematika','IPAS', 'Seni Budaya', 'Bahasa Inggris', 'Bahasa Jawa', 'Seni Rupa', 'Seni Tari', 'Seni Teater', 'Seni Musik', 'TIK', 'PJOK'];

@@ -190,7 +190,7 @@ class UserController extends Controller
 
     public function resetRedirect(Request $request, $email, $token)
     {
-        $url = "pesanbuku://reset-password?token=$token&email=" . urlencode($email);
+        $url = "pesanbuku://reset/reset-password?token=$token&email=" . urlencode($email);
 
         return view('ResetPass', [
             'appUrl' => $url,

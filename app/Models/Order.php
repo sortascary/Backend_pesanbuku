@@ -41,6 +41,7 @@ class Order extends Model
         'payment',
         'status',
         'total_book_price',
+        'done_at',
     ];
 
     public function user(): BelongsTo

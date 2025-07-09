@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('payment', ['cash', 'transfer', 'angsuran']);
             $table->enum('status', ['dipesan', 'diproses', 'done'])->default('dipesan');
             $table->integer('total_book_price'); 
+            $table->timestamp('done_at')->nullable();
             $table->timestamps();
         });
 

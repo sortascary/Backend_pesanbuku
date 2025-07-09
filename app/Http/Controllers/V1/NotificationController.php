@@ -17,35 +17,42 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $notification = Notification::where('user_id', $user->id);
-        return $notification;
+        $notifications = $user->notifications()->latest()->get();
+
+        return response()->json(
+            $notifications->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'title' => $notification->data['title'] ?? '',
+                    'message' => $notification->data['message'] ?? '',
+                    'order_id' => $notification->data['order_id'] ?? null,
+                    'read_at' => $notification->read_at,
+                    'created_at' => $notification->created_at,
+                ];
+            })
+        );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(CreateNotificationRequest $request)
+    public function Read(Request $request, string $id)
     {
-        $validated = $request->validated();
+        $user = $request->user();
 
-        $notification = Notification::create([
-            'message' => $validated['message'],
-            'sub_message' => $validated['sub_message'],
-            'user_id' => $validated['user_id'],
-        ]);
+        $notification = $user->unreadNotifications()->find($id);
 
-        return response()->json([
-            'message' => 'Notification created successfully',
-            'data' => $notification
-        ], 201);
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found'], 404);
+        }
+
+        $notification->markAsRead();
+
+        return response()->json(['message' => 'Notification marked as read']);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function ReadAll(Request $request)
     {
-        //
+        $request->user()->unreadNotifications->markAsRead();
+
+        return response()->json(['message' => 'All notifications marked as read']);
     }
 
     /**

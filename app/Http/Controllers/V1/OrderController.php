@@ -18,6 +18,8 @@ use App\Http\Requests\V1\Order\UpdateOrderRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use App\Jobs\SendOrderReminderNotification;
+
 
 class OrderController extends Controller
 {
@@ -50,23 +52,13 @@ class OrderController extends Controller
         $ORDProses = Order::where('status', 'diproses')->count();
         $sixMonthsAgo = Carbon::now()->subMonths(6);
 
-        $ordersQuery->where(function ($query) use ($sixMonthsAgo) {
-                $query->where(function ($q) {
-                    $q->where('status', '!=', 'done');
-                })->orWhere(function ($q) use ($sixMonthsAgo) {
-                    $q->where('payment', 'angsuran')
-                    ->where('status', 'done')
-                    ->where('updated_at', '>=', $sixMonthsAgo);
-                });
-            });
-
         $TotalTagihan = Order::where(function ($query) use ($sixMonthsAgo) {
                 $query->where(function ($q) {
                     $q->where('status', '!=', 'done');
                 })->orWhere(function ($q) use ($sixMonthsAgo) {
                     $q->where('payment', 'angsuran')
                     ->where('status', 'done')
-                    ->where('updated_at', '>=', $sixMonthsAgo);
+                    ->where('done_at', '>=', $sixMonthsAgo);
                 });
             })->count();
 
@@ -180,6 +172,24 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
+    public function test(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        $order = Order::with('orderbook.bookclass')->find($id);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        SendOrderReminderNotification::dispatch($order, 1)->delay(now()->addMinutes(1));
+
+        return response()->json([
+            'message' => 'Reminder job scheduled for 10 minutes'
+        ]);
+    }
+
+
     /**
      * Update the specified resource in storage.
      */
@@ -211,6 +221,18 @@ class OrderController extends Controller
                     $bookClass->stock -= $orderBook->amount;
                     $bookClass->save();
                 }
+            }
+
+            if ($order->status != 'done' && $data['status'] == 'done') {
+                $data['done_at'] = now();
+                if ($order->payment === 'angsuran') {
+                    for ($i = 1; $i <= 6; $i++) {
+                        SendOrderReminderNotification::dispatch($order, $i)
+                            ->delay(now()->addMonths($i));
+                    }
+                }
+            } else {
+                $data['done_at'] = null;
             }
 
             $order->update($data);
@@ -275,17 +297,26 @@ class OrderController extends Controller
         return response()->json(['message' => 'Order deleted successfully']);
     }
 
-    public function laporan(Request $request){
+    public function laporan(Request $request, $startDate, $endDate)
+    {
+        try {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid date format'], 422);
+        }
 
         $user = $request->user();
 
         $orders = Order::with(['user', 'orderbook'])
-        ->where('status', 'done')
-        ->orderBy('created_at', 'desc')
-        ->get();
+            ->where('status', 'done')
+            ->whereBetween('done_at', [$start, $end])
+            ->orderBy('done_at', 'desc')
+            ->paginate(10);
 
         return new LaporanResource($orders);
     }
+
 
     public function tagihan(Request $request, string $isPayed)
     {
@@ -302,7 +333,7 @@ class OrderController extends Controller
                     $query->where('payment', '!=', 'angsuran')
                         ->orWhere(function ($q) use ($sixMonthsAgo) {
                             $q->where('payment', 'angsuran')
-                                ->where('updated_at', '<', $sixMonthsAgo);
+                                ->where('done_at', '<', $sixMonthsAgo);
                         });
                 });
         } else {
@@ -312,7 +343,7 @@ class OrderController extends Controller
                 })->orWhere(function ($q) use ($sixMonthsAgo) {
                     $q->where('payment', 'angsuran')
                     ->where('status', 'done')
-                    ->where('updated_at', '>=', $sixMonthsAgo);
+                    ->where('done_at', '>=', $sixMonthsAgo);
                 });
             });
         }
@@ -326,7 +357,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $orders = $ordersQuery->get();
+        $orders = $ordersQuery->paginate(10);
 
         return OrderResource::collection($orders);
     }

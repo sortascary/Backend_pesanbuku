@@ -18,6 +18,7 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         $user = User::inRandomOrder()->first() ?? User::factory();
+        $status = $this->faker->randomElement(['diPesan', 'diProses', 'done']);
 
         return [
             'user_id' => $user->id,
@@ -25,7 +26,8 @@ class OrderFactory extends Factory
             'schoolName' => $user->schoolName,
             'daerah' => $user->daerah?? "Kudus",
             'payment' => $this->faker->randomElement(['cash', 'transfer', 'angsuran']),
-            'status' => $this->faker->randomElement(['diPesan', 'diProses', 'done']),
+            'status' => $status,
+            'done_at' => $status == 'done'? now() : null ,
             'total_book_price' => $this->faker->numberBetween(10000, 20000),
         ];
     }

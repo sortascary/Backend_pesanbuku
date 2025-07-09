@@ -59,6 +59,7 @@ Route::prefix('order')->group(function (){
     
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [OrderController::class , 'index']);
+        Route::get('/test/{id}', [OrderController::class , 'test']);
         Route::post('/add', [OrderController::class , 'store']);
         Route::get('/tagihan/{isPayed}', [OrderController::class , 'tagihan']);
         
@@ -72,10 +73,13 @@ Route::prefix('order')->group(function (){
     });
 });
 
-Route::get('/laporan', [OrderController::class , 'laporan']);
+Route::get('/laporan/{startDate}/{endDate}', [OrderController::class , 'laporan']);
 
 Route::prefix('notification')->group(function (){
-    Route::get('/', [NotificationController::class, 'index'])->middleware(['auth:sanctum']);   
-    Route::get('/{id}', [NotificationController::class, 'show']);  
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);   
+        Route::post('/read/{id}', [NotificationController::class, 'Read']);  
+        Route::post('/readAll', [NotificationController::class, 'ReadAll']); 
+    });
 });
 
