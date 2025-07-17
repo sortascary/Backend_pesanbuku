@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('status', ['dipesan', 'diproses', 'done'])->default('dipesan');
             $table->integer('total_book_price'); 
             $table->timestamp('done_at')->nullable();
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
 

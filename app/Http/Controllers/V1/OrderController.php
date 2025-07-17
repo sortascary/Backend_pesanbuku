@@ -290,9 +290,14 @@ class OrderController extends Controller
                     $bookClass->save();
                 }
             }
+        } 
+        
+        if ($order->status != 'done'){            
+            $order->delete();
+        }else{
+            $order->forceDelete();
         }
     
-        $order->delete();
     
         return response()->json(['message' => 'Order deleted successfully']);
     }
@@ -308,7 +313,8 @@ class OrderController extends Controller
 
         $user = $request->user();
 
-        $orders = Order::with(['user', 'orderbook'])
+        $orders = Order::withTrashed()
+            ->with(['user', 'orderbook'])
             ->where('status', 'done')
             ->whereBetween('done_at', [$start, $end])
             ->orderBy('done_at', 'desc')
