@@ -4,9 +4,11 @@ namespace App\Http\Controllers\V1;
 
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\Order;
+
 use Illuminate\Http\Request;
-use App\Http\Requests\V1\Notification\CreateNotificationRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\V1\OrderResource;
 
 class NotificationController extends Controller
 {
@@ -17,15 +19,23 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $notifications = $user->notifications()->latest()->get();
+        $notifications = $user->unreadNotifications()->latest()->paginate(10);
+        $order = Order::with(['user', 'orderbook'])->find($notification->data['order_id'] ?? null);
 
         return response()->json(
             $notifications->map(function ($notification) {
+                $orderId = $notification->data['order_id'] ?? null;
+
+                $order = null;
+                if ($orderId) {
+                    $order = Order::with(['user', 'orderbook'])->withTrashed()->find($orderId);
+                }
+                
                 return [
                     'id' => $notification->id,
                     'title' => $notification->data['title'] ?? '',
                     'message' => $notification->data['message'] ?? '',
-                    'order_id' => $notification->data['order_id'] ?? null,
+                    'order' => $order ? new OrderResource($order) : null,
                     'read_at' => $notification->read_at,
                     'created_at' => $notification->created_at,
                 ];
@@ -43,16 +53,16 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Notification not found'], 404);
         }
 
-        $notification->markAsRead();
+        $notification->Delete();
 
-        return response()->json(['message' => 'Notification marked as read']);
+        return response()->json(['message' => 'Notification marked as read'], 201);
     }
 
     public function ReadAll(Request $request)
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $request->user()->unreadNotifications->each->Delete();
 
-        return response()->json(['message' => 'All notifications marked as read']);
+        return response()->json(['message' => 'All notifications marked as read'], 201);
     }
 
     /**

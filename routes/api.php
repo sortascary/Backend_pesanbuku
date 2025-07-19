@@ -78,8 +78,8 @@ Route::get('/laporan/{startDate}/{endDate}', [OrderController::class , 'laporan'
 Route::prefix('notification')->group(function (){
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [NotificationController::class, 'index']);   
-        Route::post('/read/{id}', [NotificationController::class, 'Read']);  
-        Route::post('/readAll', [NotificationController::class, 'ReadAll']); 
+        Route::put('/read/{id}', [NotificationController::class, 'Read']);  
+        Route::put('/readAll', [NotificationController::class, 'ReadAll']); 
     });
 });
 
