@@ -24,7 +24,7 @@ class BookController extends Controller
         $user = $request->user();
         if ($user->role == 'distributor') {
             $daerah = BookDaerah::with('book')->get();
-        } else {       
+        } else {
             $daerah = BookDaerah::with('book')->where('daerah', $user->daerah)->get();
         }
 
@@ -58,7 +58,7 @@ class BookController extends Controller
 
     public function orderSearch(Request $request, string $daerah)
     {
-        $daerah = BookDaerah::with('book')->where('daerah',  $daerah)->get();
+        $daerah = BookDaerah::with('book')->where('daerah', $daerah)->get();
         return BookOrderResource::collection($daerah);
     }
 
@@ -73,12 +73,12 @@ class BookController extends Controller
         $data = $request->validated();
         DB::beginTransaction();
 
-        try{
+        try {
             $bookPost = Book::create([
                 'name' => $request->name,
             ]);
 
-            foreach($request->book_price as $book){
+            foreach ($request->book_price as $book) {
                 BookDaerah::create([
                     'book_id' => $bookPost->id,
                     'daerah' => $book['daerah'],
@@ -88,7 +88,7 @@ class BookController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Book created successfully', 
+                'message' => 'Book created successfully',
                 'data' => new BookResource($bookPost)
             ], 201);
         } catch (\Exception $e) {
@@ -102,7 +102,7 @@ class BookController extends Controller
         $data = $request->validated();
         DB::beginTransaction();
 
-        try{
+        try {
             $bookPost = BookClass::create([
                 'book_id' => $request->book_id,
                 'stock' => $request->stock,
@@ -111,7 +111,7 @@ class BookController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Stock class created successfully', 
+                'message' => 'Stock class created successfully',
                 'data' => $bookPost
             ], 201);
         } catch (\Exception $e) {
@@ -131,9 +131,9 @@ class BookController extends Controller
         $data = $request->validated();
 
         $book->update($data);
-    
+
         return response()->json([
-            'message' => 'Stock updated successfully', 
+            'message' => 'Stock updated successfully',
             'data' => new BookClassResource($book)
         ]);
     }
@@ -149,23 +149,27 @@ class BookController extends Controller
         $data = $request->validated();
 
         $book->update($data);
-    
+
         return response()->json([
-            'message' => 'Price updated successfully', 
+            'message' => 'Price updated successfully',
             'data' => new BookDaerahResource($book)
         ]);
     }
 
     public function deleteBook(string $id)
     {
-        $book = BookDaerah::find($id);
+        $bookDaerah = BookDaerah::find($id);
 
-        if (!$book) {
+        if (!$bookDaerah) {
             return response()->json(['message' => 'Book not found'], 404);
         }
-        
-        $book->book->delete();
-    
+        $bookId = $bookDaerah->book_id;
+        BookDaerah::where('book_id', $bookId)->delete();
+        $book = Book::find($bookId);
+        if ($book) {
+            $book->delete();
+        }
+
         return response()->json(['message' => 'Book deleted successfully']);
     }
 
@@ -178,9 +182,10 @@ class BookController extends Controller
         }
 
         $class->delete();
-    
+
         return response()->json([
             'message' => 'Class deleted successfully',
         ]);
     }
 }
+
