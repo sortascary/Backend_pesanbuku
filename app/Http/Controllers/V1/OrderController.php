@@ -4,12 +4,12 @@ namespace App\Http\Controllers\V1;
 
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Book;
 use App\Models\OrderBook;
 use App\Models\BookClass;
 
-use App\Models\Book;
-
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Resources\V1\OrderResource;
 use App\Http\Resources\V1\OrderBookResource;
 use App\Http\Resources\V1\LaporanResource;
@@ -46,21 +46,28 @@ class OrderController extends Controller
 
     public function init(Request $request)
     {
+        $user = $request->user();
+
         $TotalBook = Book::count();
         $TotalStock = BookClass::sum('stock');
         $ORDPesan = Order::where('status', 'dipesan')->count();
         $ORDProses = Order::where('status', 'diproses')->count();
         $sixMonthsAgo = Carbon::now()->subMonths(6);
 
-        $TotalTagihan = Order::where(function ($query) use ($sixMonthsAgo) {
-                $query->where(function ($q) {
-                    $q->where('status', '!=', 'done');
-                })->orWhere(function ($q) use ($sixMonthsAgo) {
+        $tagihanQuery = Order::where(function ($query) use ($sixMonthsAgo) {
+            $query->where('status', '!=', 'done')
+                ->orWhere(function ($q) use ($sixMonthsAgo) {
                     $q->where('payment', 'angsuran')
-                    ->where('status', 'done')
-                    ->where('done_at', '>=', $sixMonthsAgo);
+                        ->where('status', 'done')
+                        ->where('done_at', '>=', $sixMonthsAgo);
                 });
-            })->count();
+        });
+
+        if ($user->role == "sekolah") {
+            $tagihanQuery->where('user_id', $user->id);
+        }
+
+        $TotalTagihan = $tagihanQuery->count();
 
 
 
@@ -172,21 +179,14 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
-    public function test(Request $request, string $id)
+    public function test()
     {
-        $user = $request->user();
-
-        $order = Order::with('orderbook.bookclass')->find($id);
-
-        if (!$order) {
-            return response()->json(['message' => 'Order not found'], 404);
+        try {
+            $pdf = PDF::loadView('pdf.test');
+            return $pdf->stream ('test.pdf');
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        SendOrderReminderNotification::dispatch($order, 1)->delay(now()->addMinutes(1));
-
-        return response()->json([
-            'message' => 'Reminder job scheduled for 10 minutes'
-        ]);
     }
 
 
@@ -368,5 +368,62 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
+    public function generatePDF()
+    {
+        $rawBooks = BookClass::with(['book.bookdaerah'])->get();
 
+        $groupedBooks = [];
+
+        foreach ($rawBooks as $row) {
+            $title = $row->book->name;
+
+            if (!isset($groupedBooks[$title])) {
+                $groupedBooks[$title] = [
+                    'title' => $title,
+                    'price' => optional($row->book->bookdaerah->firstWhere('daerah', 'Kudus'))->price ?? 0,
+                    'quantities' => array_fill(1, 6, 0), // class 1–6
+                    'total_ambil' => 0,
+                ];
+            }
+
+            $kelas = $row->class; // 1 to 6
+            $groupedBooks[$title]['quantities'][$kelas] = $row->stock;
+            $groupedBooks[$title]['total_ambil'] += $row->stock;
+        }
+
+        // Now build the final $items array
+        $items = [];
+        $no = 1;
+        $total_pesanan = 0;
+
+        foreach ($groupedBooks as $group) {
+            $total_bayar = $group['total_ambil'] * $group['price'];
+            $total_pesanan += $total_bayar;
+
+            $items[] = [
+                'no' => $no++,
+                'title' => $group['title'],
+                'price' => $group['price'],
+                'quantities' => array_values($group['quantities']),
+                'total_ambil' => $group['total_ambil'],
+                'total_bayar' => $total_bayar,
+            ];
+        }
+
+        $data = [
+            'school' => 'SDN 1 GONDOHARUM',
+            'city' => 'KUDUS',
+            'semester' => 'Semester 1 2024/2025',
+            'items' => $items,
+            'total_pesanan' => $total_pesanan,
+        ];
+
+        //return view('pdf.pdf_note', $data);
+        try {
+            $pdf = PDF::loadView('pdf.pdf_note', $data);
+            return $pdf->download('nota_pengambilan.pdf');
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

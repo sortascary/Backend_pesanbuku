@@ -190,11 +190,21 @@ class UserController extends Controller
 
     public function resetRedirect(Request $request, $email, $token)
     {
+        $record = DB::table('password_reset_tokens')
+            ->where('email', $email)
+            ->first();
+
+        if (!$record || !Hash::check($token, $record->token)) {
+            return view('ResetPass', [
+                'appUrl' => "*",
+                'isValid' => false
+            ]);
+        }
         $url = "pesanbuku://reset/reset-password?token=$token&email=" . urlencode($email);
 
         return view('ResetPass', [
             'appUrl' => $url,
-            'message' => 'Redirecting to the app.'
+            'isValid' => true
         ]);
     }
 
