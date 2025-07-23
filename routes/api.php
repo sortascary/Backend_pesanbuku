@@ -9,7 +9,7 @@ use App\Http\Controllers\V1\NotificationController;
 use Illuminate\Support\Facades\URL;
 
 //for the admin dashboard
-Route::get('/init', [OrderController::class , 'init']);
+Route::get('/init', [OrderController::class , 'init'])->middleware(['auth:sanctum']);
 
 Route::prefix('user')->group(function (){
     Route::post('/register', [UserController::class , 'register']);
@@ -57,9 +57,11 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
 
 Route::prefix('order')->group(function (){
     
+    Route::get('/createpdf', [OrderController::class , 'generatePDF']);
+    Route::get('/test', [OrderController::class , 'test']);
+    
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [OrderController::class , 'index']);
-        Route::get('/test/{id}', [OrderController::class , 'test']);
         Route::post('/add', [OrderController::class , 'store']);
         Route::get('/tagihan/{isPayed}', [OrderController::class , 'tagihan']);
         
