@@ -18,7 +18,7 @@ class BookDaerahFactory extends Factory
     {
         return [
             'book_id' => $this->faker->word,
-            'price'  => $this->faker->numberBetween(15000, 25000),
+            'price'  => $this->faker->randomElement([15000, 17000, 20000]),
             'daerah' => $this->faker->word,
         ];
     }
