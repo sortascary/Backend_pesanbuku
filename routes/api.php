@@ -40,37 +40,38 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
         Route::get('/stock', [BookController::class , 'stock']); //specifications of the book for stock page
         Route::get('/stock/{id}', [BookController::class , 'stocksearch']);
         Route::prefix('create')->group(function (){
-            Route::post('/', [BookController::class , 'createBook']); 
-            Route::post('/stock', [BookController::class , 'createClass']); 
+            Route::post('/', [BookController::class , 'createBook']);
+            Route::post('/stock', [BookController::class , 'createClass']);
         });
         Route::prefix('update')->group(function (){
-            Route::put('/stock/{id}', [BookController::class , 'updateStock']); 
-            Route::put('/price/{id}', [BookController::class , 'updatePrice']); 
-        });        
+            Route::put('/stock/{id}', [BookController::class , 'updateStock']);
+            Route::put('/price/{id}', [BookController::class , 'updatePrice']);
+        });
         Route::prefix('delete')->group(function (){
-            Route::delete('/stock/{id}', [BookController::class , 'deleteClass']); 
-            Route::delete('/book/{id}', [BookController::class , 'deleteBook']); 
+            Route::delete('/stock/{id}', [BookController::class , 'deleteClass']);
+            Route::delete('/book/{id}', [BookController::class , 'deleteBook']);
         });
         Route::get('/daerah/{place}', [BookController::class , 'daerahsearch']);
     });
 });
 
 Route::prefix('order')->group(function (){
-    
+
     Route::get('/createpdf/{id}', [OrderController::class , 'generatePDF']);
     Route::get('/test', [OrderController::class , 'test']);
-    
+
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [OrderController::class , 'index']);
         Route::post('/add', [OrderController::class , 'store']);
         Route::get('/tagihan/{isPayed}', [OrderController::class , 'tagihan']);
-        
+        Route::get('/emailpdf/{id}', [OrderController::class , 'emailpdf']);
+
         Route::middleware('admin')->group(function () {
             Route::put('/update/{id}', [OrderController::class , 'updateorder']);
             Route::put('/update/book/{id}', [OrderController::class , 'updatebook']);
             Route::delete('/delete/{id}', [OrderController::class , 'destroy']);
         });
-        
+
         Route::get('/{status}', [OrderController::class , 'search']);
     });
 });
@@ -79,9 +80,9 @@ Route::get('/laporan/{startDate}/{endDate}', [OrderController::class , 'laporan'
 
 Route::prefix('notification')->group(function (){
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::get('/', [NotificationController::class, 'index']);   
-        Route::put('/read/{id}', [NotificationController::class, 'Read']);  
-        Route::put('/readAll', [NotificationController::class, 'ReadAll']); 
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::put('/read/{id}', [NotificationController::class, 'Read']);
+        Route::put('/readAll', [NotificationController::class, 'ReadAll']);
     });
 });
 

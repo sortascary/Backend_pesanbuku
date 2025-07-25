@@ -19,6 +19,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use App\Jobs\SendOrderReminderNotification;
+use App\Notifications\SendCustomLink;
+use Illuminate\Support\Facades\Notification;
 
 
 class OrderController extends Controller
@@ -33,7 +35,7 @@ class OrderController extends Controller
         if ($user->role == 'distributor') {
             $query = Order::with(['user', 'orderbook'])
             ->orderByDesc('created_at');
-        } else {       
+        } else {
             $query = Order::with(['user', 'orderbook'])
             ->where('user_id', $user->id)
             ->orderByDesc('created_at');
@@ -146,7 +148,7 @@ class OrderController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Order created successfully', 
+                'message' => 'Order created successfully',
                 'data' => $orderPost
             ], 201);
         } catch (\Exception $e) {
@@ -168,7 +170,7 @@ class OrderController extends Controller
             ->where('status', $status)
             ->orderByDesc('created_at')
             ->paginate(10);
-        } else {       
+        } else {
             $orders = Order::with(['user', 'orderbook'])
             ->where('user_id', $user->id)
             ->where('status', $status)
@@ -200,7 +202,7 @@ class OrderController extends Controller
     public function updateorder(UpdateOrderRequest $request, string $id)
     {
         $order = Order::with('orderbook.bookclass')->find($id);
-        
+
         if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
         }
@@ -262,13 +264,13 @@ class OrderController extends Controller
         if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
         }
-    
+
         $data = $request->validated();
-    
+
         $order->update($data);
-    
+
         return response()->json([
-            'message' => 'Order updated successfully', 
+            'message' => 'Order updated successfully',
             'data' => new OrderBookResource($order)
         ]);
     }
@@ -286,7 +288,7 @@ class OrderController extends Controller
 
         if ($order->status == 'diproses') {
             $orderBooks = OrderBook::with('bookclass')->where('order_id', $id)->get();
-    
+
             foreach ($orderBooks as $orderBook) {
                 $bookClass = $orderBook->bookclass;
                 if ($bookClass) {
@@ -294,15 +296,15 @@ class OrderController extends Controller
                     $bookClass->save();
                 }
             }
-        } 
-        
-        if ($order->status != 'done'){            
+        }
+
+        if ($order->status != 'done'){
             $order->delete();
         }else{
             $order->forceDelete();
         }
-    
-    
+
+
         return response()->json(['message' => 'Order deleted successfully']);
     }
 
@@ -372,104 +374,114 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
+    public function emailpdf(Request $request, string $id){
+        $user = $request->user();
+
+        $link = url('api/order/createpdf/'. $id);
+
+        $user->notify(new SendCustomLink($link));
+
+        return response()->json(['message' => 'Email sent']);
+    }
+
     public function generatePDF(String $id)
-{
-    $order = Order::with(['orderbook', 'orderbook.bookClass.book.bookdaerah'])->findOrFail($id);
+    {
+        $order = Order::with(['orderbook', 'orderbook.bookClass.book.bookdaerah'])->findOrFail($id);
 
-    $allBooks = BookClass::with(['book.bookdaerah'])->get();
+        $allBooks = BookClass::with(['book.bookdaerah'])->get();
 
-    // Group order items by bookClass ID for quick lookup
-    $ordered = $order->orderbook->keyBy('book_class_id');
+        // Group order items by bookClass ID for quick lookup
+        $ordered = $order->orderbook->keyBy('book_class_id');
 
-    $groupedBooks = [];
+        $groupedBooks = [];
 
-    $doneAt = Carbon::parse($order->done_at);
-    $year = $doneAt->year;
-    $month = $doneAt->month;
+        $doneAt = Carbon::parse($order->done_at);
+        $year = $doneAt->year;
+        $month = $doneAt->month;
 
-    $doneAtFormatted = $doneAt->locale('id')->translatedFormat('d F Y');
+        $doneAtFormatted = $doneAt->locale('id')->translatedFormat('d F Y');
 
-    $semester = $month >= 7
-        ? "Semester ganjil {$year}/" . ($year + 1)
-        : "Semester genap " . ($year - 1) . "/{$year}";
+        $semester = $month >= 7
+            ? "Semester ganjil {$year}/" . ($year + 1)
+            : "Semester genap " . ($year - 1) . "/{$year}";
 
-    foreach ($allBooks as $bookClass) {
-        $book = $bookClass->book;
-        $kelas = $bookClass->class;
-        $title = $book->name;
+        foreach ($allBooks as $bookClass) {
+            $book = $bookClass->book;
+            $kelas = $bookClass->class;
+            $title = $book->name;
 
-        $price = optional($book->bookdaerah->firstWhere('daerah', $order->daerah))->price ?? 0;
+            $price = optional($book->bookdaerah->firstWhere('daerah', $order->daerah))->price ?? 0;
 
-        if (!isset($groupedBooks[$title])) {
-            $groupedBooks[$title] = [
-                'title' => $title,
-                'price' => $price,
-                'quantities' => array_fill(1, 6, 0),
-                'total_ambil' => 0,
+            if (!isset($groupedBooks[$title])) {
+                $groupedBooks[$title] = [
+                    'title' => $title,
+                    'price' => $price,
+                    'quantities' => array_fill(1, 6, 0),
+                    'total_ambil' => 0,
+                ];
+            }
+
+            $qty = 0;
+
+            if ($ordered->has($bookClass->id)) {
+                $qty = $ordered[$bookClass->id]->amount;
+            }
+
+            if ($kelas >= 1 && $kelas <= 6) {
+                $groupedBooks[$title]['quantities'][$kelas] += $qty;
+                $groupedBooks[$title]['total_ambil'] += $qty;
+            }
+        }
+
+        // Format for PDF
+        $items = [];
+        $no = 1;
+        $total_pesanan = 0;
+
+        foreach ($groupedBooks as $group) {
+            $total_bayar = $group['total_ambil'] * $group['price'];
+            $total_pesanan += $total_bayar;
+
+            $items[] = [
+                'no' => $no++,
+                'title' => $group['title'],
+                'price' => $group['price'],
+                'quantities' => array_values($group['quantities']),
+                'total_ambil' => $group['total_ambil'],
+                'total_bayar' => $total_bayar,
             ];
         }
 
-        $qty = 0;
+        // ✅ Add order_books with NULL book_class_id as separate rows
+        $nullBooks = $order->orderbook->whereNull('book_class_id');
 
-        if ($ordered->has($bookClass->id)) {
-            $qty = $ordered[$bookClass->id]->amount;
+        foreach ($nullBooks as $nullBook) {
+            $items[] = [
+                'no' => $no++,
+                'title' => $nullBook->name ?? '(Tanpa Nama)',
+                'price' => $nullBook->bought_price ?? 0,
+                'quantities' => array_fill(0, 6, ''), // Blank for class breakdown
+                'total_ambil' => $nullBook->amount,
+                'total_bayar' => $nullBook->subtotal,
+            ];
+            $total_pesanan += $nullBook->subtotal ?? 0;
         }
 
-        if ($kelas >= 1 && $kelas <= 6) {
-            $groupedBooks[$title]['quantities'][$kelas] += $qty;
-            $groupedBooks[$title]['total_ambil'] += $qty;
+        $data = [
+            'school' => $order->schoolName,
+            'done_at' => $doneAtFormatted,
+            'semester' => $semester,
+            'city' => $order->daerah,
+            'items' => $items,
+            'total_pesanan' => $total_pesanan,
+        ];
+
+        try {
+            $pdf = PDF::loadView('pdf.pdf_note', $data);
+            return $pdf->download("pesanan_" . $order->schoolName . "_" . $order->id . ".pdf");
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
-    // Format for PDF
-    $items = [];
-    $no = 1;
-    $total_pesanan = 0;
-
-    foreach ($groupedBooks as $group) {
-        $total_bayar = $group['total_ambil'] * $group['price'];
-        $total_pesanan += $total_bayar;
-
-        $items[] = [
-            'no' => $no++,
-            'title' => $group['title'],
-            'price' => $group['price'],
-            'quantities' => array_values($group['quantities']),
-            'total_ambil' => $group['total_ambil'],
-            'total_bayar' => $total_bayar,
-        ];
-    }
-
-    // ✅ Add order_books with NULL book_class_id as separate rows
-    $nullBooks = $order->orderbook->whereNull('book_class_id');
-
-    foreach ($nullBooks as $nullBook) {
-        $items[] = [
-            'no' => $no++,
-            'title' => $nullBook->name ?? '(Tanpa Nama)',
-            'price' => $nullBook->bought_price ?? 0,
-            'quantities' => array_fill(0, 6, ''), // Blank for class breakdown
-            'total_ambil' => $nullBook->amount,
-            'total_bayar' => $nullBook->subtotal,
-        ];
-        $total_pesanan += $nullBook->subtotal ?? 0;
-    }
-
-    $data = [
-        'school' => $order->schoolName,
-        'done_at' => $doneAtFormatted,
-        'semester' => $semester,
-        'city' => $order->daerah,
-        'items' => $items,
-        'total_pesanan' => $total_pesanan,
-    ];
-
-    try {
-        $pdf = PDF::loadView('pdf.pdf_note', $data);
-        return $pdf->download("pesanan_" . $order->schoolName . "_" . $order->id . ".pdf");
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-}
 
 }
