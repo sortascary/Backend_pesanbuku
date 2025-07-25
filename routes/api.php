@@ -57,7 +57,7 @@ Route::prefix('book')->middleware('auth:sanctum')->group(function (){
 
 Route::prefix('order')->group(function (){
     
-    Route::get('/createpdf', [OrderController::class , 'generatePDF']);
+    Route::get('/createpdf/{id}', [OrderController::class , 'generatePDF']);
     Route::get('/test', [OrderController::class , 'test']);
     
     Route::middleware(['auth:sanctum'])->group(function () {

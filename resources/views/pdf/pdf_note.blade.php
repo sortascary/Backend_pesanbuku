@@ -38,19 +38,23 @@
     <div class="max-w-7xl mx-auto px-4 py-6 text-xs">
     <div class="text-center mb-6">
         <h2 style="font-size: 18px; font-weight: bold;">Nota Pengambilan</h2>
-        <p class="font-medium">Semester 1 2024/2025</p>
+        <p class="font-medium">{{ $semester }}</p>
     </div>
 
-    <div class="mb-4">
-        <div class="mt-4 text-sm text-gray-600 italic">
-            <p class="text-right"><em>Tandai Stabilo yang sudah terkirim</em></p>
+        <div class="mb-4">
+            <div class="mt-4 text-sm text-gray-600 italic">
+                <p class="text-right"><em>Tandai Stabilo yang sudah terkirim</em></p>
+            </div>
+            <table style="width: 100%; margin-bottom: 1rem;">
+            <tr>
+                <td><strong>Sekolah Dasar:</strong> {{ $school }}</td>
+                <td><strong>Telp/Wa:</strong> 0821 333 759 59</td>
+            </tr>
+            <tr>
+                <td><strong>Kota / Kabupaten:</strong> {{ $city }}</td>
+                <td><strong>Tanggal:</strong> {{ $done_at }}</td>
+            </tr>
         </div>
-        <div class="flex justify-between">            
-            <p><strong>Sekolah Dasar:</strong> {{ $school }}</p>
-            <p><strong>Telp/Wa:</strong> 0821 333 759 59</p>
-        </div>
-        <p><strong>Kota / Kabupaten:</strong> {{ $city }}</p>
-    </div>
 
     <div class="overflow-x-auto">
         <table class="w-full border border-collapse text-center">

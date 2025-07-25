@@ -24,7 +24,7 @@ class CreateClassRequest extends FormRequest
         return [
             'book_id' => 'required|string|max:255',
             'stock' => 'required|integer|min:1',
-            'class' => 'required|integer|min:1',
+            'class' => 'required|integer|min:1|max:6',
         ];
     }
 }
