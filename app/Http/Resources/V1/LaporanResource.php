@@ -15,8 +15,8 @@ class LaporanResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'total_penjualan' => $this->sum('total_book_price'),
-            'orders' => OrderResource::collection( $this),
+            'total_penjualan' => $this['total_penjualan'],
+            'orders' => OrderResource::collection($this['orders']),
         ];
     }
 }

@@ -65,8 +65,12 @@ class OrderController extends Controller
                 });
         });
 
-        if ($user->role == "sekolah") {
+        if ($user->role === 'distributor') {
+            // no restriction
+        } elseif ($user->role === 'sekolah') {
             $tagihanQuery->where('user_id', $user->id);
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $TotalTagihan = $tagihanQuery->count();
@@ -319,14 +323,20 @@ class OrderController extends Controller
 
         $user = $request->user();
 
-        $orders = Order::withTrashed()
+        $orderquery = Order::withTrashed()
             ->with(['user', 'orderbook'])
             ->where('status', 'done')
             ->whereBetween('done_at', [$start, $end])
-            ->orderBy('done_at', 'desc')
-            ->paginate(10);
+            ->orderBy('done_at', 'desc');
 
-        return new LaporanResource($orders);
+        $earnings = (clone $orderquery)->get()->sum('total_book_price');
+
+        $orders = $orderquery->paginate(10);
+
+        return new LaporanResource([
+            'orders' => $orders,
+            'total_penjualan' => $earnings,
+        ]);
     }
 
 
@@ -360,7 +370,6 @@ class OrderController extends Controller
             });
         }
 
-        //Role filtering
         if ($user->role === 'distributor') {
             // no restriction
         } elseif ($user->role === 'sekolah') {

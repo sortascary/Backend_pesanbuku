@@ -66,7 +66,6 @@ class UserController extends Controller
                 'name' => $data['name'],
                 'phone' => $data['phone'],
                 'role' => $data['role'],
-                'FCMToken' => $data['FCMToken'] ?? null,
                 'daerah' => $data['role'] === 'sekolah' ? $data['daerah'] ?? null : null,
                 'schoolName' => $data['role'] === 'sekolah' ? $data['schoolName'] ?? null : null,
                 'password' => Hash::make($data['password']),
@@ -78,7 +77,6 @@ class UserController extends Controller
                 'phone' => $data['phone'],
                 'email' => $data['email'],
                 'role' => $data['role'],
-                'FCMToken' => $data['FCMToken'] ?? null,
                 'daerah' => $data['role'] === 'sekolah' ? $data['daerah'] ?? null : null,
                 'schoolName' => $data['role'] === 'sekolah' ? $data['schoolName'] ?? null : null,
                 'password' => Hash::make($data['password']),
@@ -105,11 +103,6 @@ class UserController extends Controller
         }
 
         $user = User::where('email', $data['email'])->first();
-
-        if (isset($data['FCMToken'])) {
-            $user->FCMToken = $data['FCMToken'];
-            $user->save();
-        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

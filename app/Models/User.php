@@ -21,7 +21,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'daerah',
         'schoolName',
         'image',
-        'FCMToken',
         'email_verifird_at',
     ];
 

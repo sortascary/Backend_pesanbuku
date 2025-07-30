@@ -21,7 +21,6 @@ return new class extends Migration
             $table->enum('daerah', ['Demak', 'Jepara', 'Kudus'])->nullable();
             $table->enum('role', ['sekolah', 'distributor']); 
             $table->string('image')->nullable();
-            $table->string('FCMToken')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
