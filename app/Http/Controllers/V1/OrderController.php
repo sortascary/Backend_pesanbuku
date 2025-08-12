@@ -292,8 +292,14 @@ class OrderController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        $messageData = $request->validate([
+            'message' => 'required|string|max:255',
+        ]);
+
+        $reason = $messageData['message'];
+
         $order = Order::find($id);
 
         if (!$order) {
@@ -310,6 +316,11 @@ class OrderController extends Controller
                     $bookClass->save();
                 }
             }
+        }
+
+        if ($order->user) {
+            $reason = $message;
+            $order->user->notify(new OrderCancledNotification($order, $reason));
         }
 
         if ($order->status != 'done'){

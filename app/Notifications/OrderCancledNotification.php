@@ -6,11 +6,14 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class OrderReminderNotification extends Notification implements ShouldQueue
+class OrderCancledNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(public $order, public int $month)
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct(public $order, public string $message)
     {
         //
     }
@@ -20,11 +23,11 @@ class OrderReminderNotification extends Notification implements ShouldQueue
         return ['database'];
     }
 
-    public function toDatabase($notifiable): array
+    public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => 'Reminder: Ingat pembayaran Angsuran!',
-            'message' => 'Mohon untuk pembayaran Angsuran untuk bulan ke-' . $this->month,
+            'title' => 'Notifikasi: Order Ditolak',
+            'message' => 'Mohon maaf order ditolak karena ' . $this->message,
             'order_id' => $this->order->id,
         ];
     }
@@ -32,8 +35,8 @@ class OrderReminderNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Reminder: Ingat pembayaran Angsuran!',
-            'message' => 'Mohon untuk pembayaran Angsuran untuk bulan ke-' . $this->month,
+            'title' => 'Notifikasi: Order Ditolak',
+            'message' => 'Mohon maaf order ditolak karena ' . $this->message,
             'order_id' => $this->order->id,
         ];
     }
