@@ -105,6 +105,7 @@ class OrderController extends Controller
                 'payment' => $request->payment,
                 'status' => $request->status,
                 'total_book_price' => 0,
+                'unpaid_amount' => 0,
             ]);
 
             $totalPrice = 0;
@@ -146,8 +147,10 @@ class OrderController extends Controller
                 ]);
             }
 
-
-            $orderPost->update(['total_book_price' => $totalPrice]);
+            $orderPost->update([
+                'total_book_price' => $totalPrice,
+                'unpaid_amount'    => $totalPrice,
+            ]);
 
             DB::commit();
 
@@ -204,7 +207,7 @@ class OrderController extends Controller
      * Update the specified resource in storage.
      */
     public function updateorder(UpdateOrderRequest $request, string $id)
-    {
+    {   
         $order = Order::with('orderbook.bookclass')->find($id);
 
         if (!$order) {
@@ -216,7 +219,6 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // If status is changing to 'diproses', deduct stock
             if ($order->status !== 'diproses' && $data['status'] == 'diproses') {
                 foreach ($order->orderbook as $orderBook) {
                     $bookClass = $orderBook->bookclass;
@@ -233,8 +235,14 @@ class OrderController extends Controller
                 }
             }
 
+            if (isset($data['paid_amount'])) {
+                $order->unpaid_amount = max(0, $order->unpaid_amount - $data['paid_amount']);
+            }
+
+            // If status changes to 'done', set done_at & schedule reminders
             if ($order->status != 'done' && $data['status'] == 'done') {
                 $data['done_at'] = now();
+
                 if ($order->payment === 'angsuran') {
                     for ($i = 1; $i <= 6; $i++) {
                         SendOrderReminderNotification::dispatch($order, $i)
@@ -245,7 +253,8 @@ class OrderController extends Controller
                 $data['done_at'] = null;
             }
 
-            $order->update($data);
+            $order->fill($data);
+            $order->save();
 
             DB::commit();
 
@@ -259,6 +268,7 @@ class OrderController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
 
 
     public function updatebook(Request $request, string $id)
@@ -331,14 +341,41 @@ class OrderController extends Controller
 
         $earnings = (clone $orderquery)->get()->sum('total_book_price');
 
+        $total_order = (clone $orderquery)->count();
         $orders = $orderquery->paginate(10);
 
         return new LaporanResource([
             'orders' => $orders,
+            'total_order' => $total_order,
             'total_penjualan' => $earnings,
         ]);
     }
 
+    public function laporandelete(Request $request, $startDate, $endDate)
+    {
+        try {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid date format'], 422);
+        }
+
+        $user = $request->user();
+
+        $orderquery = Order::withTrashed()
+            ->with(['user', 'orderbook'])
+            ->where('status', 'done')
+            ->whereBetween('done_at', [$start, $end])
+            ->orderBy('done_at', 'desc')
+            ->get();
+
+        $orderquery->each->forceDelete();
+        
+        return response()->json([
+            'message' => 'Orders permanently deleted',
+            'deleted_count' => $deletedCount
+        ]);
+    }
 
     public function tagihan(Request $request, string $isPayed)
     {

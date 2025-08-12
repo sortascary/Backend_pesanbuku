@@ -16,6 +16,7 @@ class LaporanResource extends JsonResource
     {
         return [
             'total_penjualan' => $this['total_penjualan'],
+            'total_order' => $this['total_order'],
             'orders' => OrderResource::collection($this['orders']),
         ];
     }

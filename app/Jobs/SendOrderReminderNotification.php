@@ -20,6 +20,7 @@ class SendOrderReminderNotification implements ShouldQueue
     {
         if ($this->order->payment !== 'angsuran') return;
         if ($this->order->status !== 'done') return;
+        if ($order->unpaid_amount <= 0) return;
 
         $user = $this->order->user;
         $user->notify(new OrderReminderNotification($this->order, $this->month));

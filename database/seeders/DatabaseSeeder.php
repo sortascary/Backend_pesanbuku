@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->create();
+        //User::factory(10)->create();
 
         $regions = ['Demak', 'Jepara', 'Kudus'];
         $books =  ['Pendidikan pancasila', 'Bahasa Indonesia', 'Matematika','IPAS', 'Seni Budaya', 'Bahasa Inggris', 'Bahasa Jawa', 'Seni Rupa', 'Seni Tari', 'Seni Teater', 'Seni Musik', 'TIK', 'PJOK'];
@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        Order::factory(50)->create();
-        OrderBook::factory(100)->create();
+        // Order::factory(50)->create();
+        // OrderBook::factory(100)->create();
     }
 }

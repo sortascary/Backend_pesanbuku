@@ -23,6 +23,7 @@ class OrderResource extends JsonResource
             'payment' => $this->payment,
             'status' => $this->status,
             'total_book_price' => $this->total_book_price,
+            'unpaid_price' => $this->unpaid_price,
             'books' => OrderBookResource::collection($this->orderbook),
         ];
     }

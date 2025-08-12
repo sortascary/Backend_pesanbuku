@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\JsonResponse;
@@ -236,12 +237,12 @@ class UserController extends Controller
 
         try {
             if ($request->hasFile('image')) {
-                if ($user->image && Storage::disk('public')->exists($user->image)) {
-                    Storage::disk('public')->delete($user->image);
+                if ($user->image && File::exists(public_path($user->image))) {
+                    File::delete(public_path($user->image));
                 }
                 $filename = Str::uuid() . '.' . $request->file('image')->getClientOriginalExtension();
-                $path = $request->file('image')->storeAs('images', $filename, 'public');
-                $data['image'] = $path;
+                $path = $request->file('image')->move(public_path('images'), $filename);
+                $data['image'] = 'images/' . $filename;
             }
 
             $user->update($data);

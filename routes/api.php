@@ -77,6 +77,7 @@ Route::prefix('order')->group(function (){
 });
 
 Route::get('/laporan/{startDate}/{endDate}', [OrderController::class , 'laporan']);
+Route::get('/laporan/delete/{startDate}/{endDate}', [OrderController::class , 'laporan']);
 
 Route::prefix('notification')->group(function (){
     Route::middleware(['auth:sanctum'])->group(function () {

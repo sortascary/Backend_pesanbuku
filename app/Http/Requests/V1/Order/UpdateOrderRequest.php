@@ -23,6 +23,7 @@ class UpdateOrderRequest extends FormRequest
     {
         return [
             'status' => 'required|string',
+            'paid_amount' => 'nullable|integer',
             'done_at' => 'nullable|date',
         ];
     }
