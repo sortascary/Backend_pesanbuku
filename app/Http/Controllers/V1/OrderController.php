@@ -4,6 +4,7 @@ namespace App\Http\Controllers\V1;
 
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Riwayat;
 use App\Models\Book;
 use App\Models\OrderBook;
 use App\Models\BookClass;
@@ -11,6 +12,7 @@ use App\Models\BookClass;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Resources\V1\OrderResource;
+use App\Http\Resources\V1\TagihanResource;
 use App\Http\Resources\V1\OrderBookResource;
 use App\Http\Resources\V1\LaporanResource;
 use App\Http\Requests\V1\Order\OrderRequest;
@@ -19,6 +21,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use App\Jobs\SendOrderReminderNotification;
+use App\Notifications\OrderCancledNotification;
 use App\Notifications\SendCustomLink;
 use Illuminate\Support\Facades\Notification;
 
@@ -54,14 +57,13 @@ class OrderController extends Controller
         $TotalStock = BookClass::sum('stock');
         $ORDPesan = Order::where('status', 'dipesan')->count();
         $ORDProses = Order::where('status', 'diproses')->count();
-        $sixMonthsAgo = Carbon::now()->subMonths(6);
 
-        $tagihanQuery = Order::where(function ($query) use ($sixMonthsAgo) {
+        $tagihanQuery = Order::where(function ($query) {
             $query->where('status', '!=', 'done')
-                ->orWhere(function ($q) use ($sixMonthsAgo) {
+                ->orWhere(function ($q){
                     $q->where('payment', 'angsuran')
-                        ->where('status', 'done')
-                        ->where('done_at', '>=', $sixMonthsAgo);
+                    ->where('status', 'done')
+                    ->where('unpaid_amount', '>', 0);
                 });
         });
 
@@ -237,6 +239,11 @@ class OrderController extends Controller
 
             if (isset($data['paid_amount'])) {
                 $order->unpaid_amount = max(0, $order->unpaid_amount - $data['paid_amount']);
+                Riwayat::create([
+                    'order_id' => $order->id,
+                    'paid_amount' => $data['paid_amount'],
+                    'paid_at' => now()
+                ]);
             }
 
             // If status changes to 'done', set done_at & schedule reminders
@@ -319,7 +326,6 @@ class OrderController extends Controller
         }
 
         if ($order->user) {
-            $reason = $message;
             $order->user->notify(new OrderCancledNotification($order, $reason));
         }
 
@@ -384,7 +390,6 @@ class OrderController extends Controller
         
         return response()->json([
             'message' => 'Orders permanently deleted',
-            'deleted_count' => $deletedCount
         ]);
     }
 
@@ -393,27 +398,26 @@ class OrderController extends Controller
         $user = $request->user();
 
         $isPayedBool = filter_var($isPayed, FILTER_VALIDATE_BOOLEAN);
-        $sixMonthsAgo = Carbon::now()->subMonths(6);
 
         $ordersQuery = Order::with(['user', 'orderbook']);
 
         if ($isPayedBool) {
             $ordersQuery->where('status', 'done')
-                ->where(function ($query) use ($sixMonthsAgo) {
+                ->where(function ($query) {
                     $query->where('payment', '!=', 'angsuran')
-                        ->orWhere(function ($q) use ($sixMonthsAgo) {
+                        ->orWhere(function ($q) {
                             $q->where('payment', 'angsuran')
-                                ->where('done_at', '<', $sixMonthsAgo);
+                                ->where('unpaid_amount', 0);
                         });
                 });
         } else {
-            $ordersQuery->where(function ($query) use ($sixMonthsAgo) {
+            $ordersQuery->where(function ($query) {
                 $query->where(function ($q) {
                     $q->where('status', '!=', 'done');
-                })->orWhere(function ($q) use ($sixMonthsAgo) {
+                })->orWhere(function ($q)  {
                     $q->where('payment', 'angsuran')
                     ->where('status', 'done')
-                    ->where('done_at', '>=', $sixMonthsAgo);
+                    ->where('unpaid_amount', '>', 0);
                 });
             });
         }
@@ -428,7 +432,7 @@ class OrderController extends Controller
 
         $orders = $ordersQuery->paginate(10);
 
-        return OrderResource::collection($orders);
+        return TagihanResource::collection($orders);
     }
 
     public function emailpdf(Request $request, string $id){
